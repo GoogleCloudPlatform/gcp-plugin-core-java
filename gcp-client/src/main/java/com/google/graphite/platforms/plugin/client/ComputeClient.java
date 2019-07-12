@@ -38,6 +38,7 @@ import com.google.api.services.compute.model.Snapshot;
 import com.google.api.services.compute.model.SnapshotList;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -48,6 +49,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 
 /**
  * Client for communicating with the Google Compute API
@@ -348,6 +351,20 @@ public class ComputeClient {
   }
 
   /**
+   * Return an operation in the provided zone.
+   *
+   * @param projectId The ID of the project for the {@link Operation} to retrieve.
+   * @param zone The self link of the zone for the {@link Operation} to retrieve.
+   * @param operationId The ID of the {@link Operation} to retrieve.
+   * @return The {@link Operation} specified by the inputs.
+   * @throws IOException There was an error retrieving the specified {@link Operation}.
+   */
+  public Operation getZoneOperation(
+      final String projectId, final String zone, final String operationId) throws IOException {
+    return compute.zoneOperations().get(projectId, nameFromSelfLink(zone), operationId).execute();
+  }
+
+  /**
    * Appends metadata to an instance. Any metadata items with existing keys will be overwritten.
    * Otherwise, metadata is preserved. This method blocks until the operation completes.
    *
@@ -380,47 +397,52 @@ public class ComputeClient {
   }
 
   /**
-   * Blocks until an existing operation completes.
+   * Blocks until an existing {@link Operation} completes.
    *
-   * @param projectId
-   * @param operationId
-   * @param zone
-   * @param timeout
-   * @return
-   * @throws IOException
-   * @throws InterruptedException
+   * @param projectId The ID of the project for this {@link Operation}.
+   * @param operationId The ID of the {@link Operation}.
+   * @param zone The self-link of the zone for the {@link Operation}.
+   * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
+   * @return The {@link Operation.Error} for the completed {@link Operation}.
+   * @throws InterruptedException If the operation was not completed before the timeout.
    */
   public Operation.Error waitForOperationCompletion(
       final String projectId, final String operationId, final String zone, final long timeout)
-      throws IOException, InterruptedException {
-    if (Strings.isNullOrEmpty(operationId)) {
-      throw new IllegalArgumentException("Operation ID can not be null");
-    }
-    if (Strings.isNullOrEmpty(zone)) {
-      throw new IllegalArgumentException("Zone can not be null");
-    }
-    String zoneName = nameFromSelfLink(zone);
+      throws InterruptedException {
+    Preconditions.checkArgument(Strings.isNullOrEmpty(operationId), "Operation ID can not be null");
+    Preconditions.checkArgument(Strings.isNullOrEmpty(zone), "Zone can not be null");
 
-    Operation operation = compute.zoneOperations().get(projectId, zoneName, operationId).execute();
-    long start = System.currentTimeMillis();
-    final long POLL_INTERVAL = 5 * 1000;
-
-    String status = operation.getStatus();
-    while (!status.equals("DONE")) {
-      Thread.sleep(POLL_INTERVAL);
-      long elapsed = System.currentTimeMillis() - start;
-      if (elapsed >= timeout) {
-        throw new InterruptedException("Timed out waiting for operation to complete");
-      }
-      LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete..");
-      Compute.ZoneOperations.Get get =
-          compute.zoneOperations().get(projectId, zoneName, operationId);
-      operation = get.execute();
-      if (operation != null) {
-        status = operation.getStatus();
-      }
+    // Used to hold the Operation.Error which comes from polling the Operation in lambda expression.
+    Operation operation = new Operation();
+    try {
+      Awaitility.await()
+          .pollInterval(5 * 1000, TimeUnit.MILLISECONDS)
+          .timeout(timeout, TimeUnit.MILLISECONDS)
+          // Awaitility requires a function without arguments, so cannot use helper method here.
+          .until(
+              () -> {
+                LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete..");
+                try {
+                  Operation op = getZoneOperation(projectId, zone, operationId);
+                  // Store the error here.
+                  operation.setError(op.getError());
+                  return isOperationDone(op);
+                } catch (IOException ioe) {
+                  LOGGER.log(Level.WARNING, "Error retrieving operation.", ioe);
+                  return false;
+                }
+              });
+    } catch (ConditionTimeoutException e) {
+      throw new InterruptedException("Timed out waiting for operation to complete");
     }
     return operation.getError();
+  }
+
+  private boolean isOperationDone(final Operation operation) {
+    if (operation == null) {
+      return false;
+    }
+    return operation.getStatus().equals("DONE");
   }
 
   private static boolean isDeprecated(final DeprecationStatus deprecated) {
