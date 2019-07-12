@@ -36,9 +36,9 @@ public class ClientFactory {
   private final String applicationName;
 
   public ClientFactory(
-      Optional<HttpTransport> httpTransport,
-      HttpRequestInitializer httpRequestInitializer,
-      String applicationName)
+      final Optional<HttpTransport> httpTransport,
+      final HttpRequestInitializer httpRequestInitializer,
+      final String applicationName)
       throws IOException, GeneralSecurityException {
     this.transport = httpTransport.orElse(GoogleNetHttpTransport.newTrustedTransport());
     this.jsonFactory = new JacksonFactory();
@@ -70,7 +70,7 @@ public class ClientFactory {
             .build());
   }
 
-  private void initializeRequest(AbstractGoogleClientRequest request) {
+  private void initializeRequest(final AbstractGoogleClientRequest request) {
     request.setRequestHeaders(request.getRequestHeaders().setUserAgent(applicationName));
   }
 }

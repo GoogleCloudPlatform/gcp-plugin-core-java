@@ -39,7 +39,7 @@ public class ContainerClient {
    * @param container The {@link Container} instance this class will utilize for interacting with
    *     the GKE API.
    */
-  public ContainerClient(Container container) {
+  public ContainerClient(final Container container) {
     this.container = Preconditions.checkNotNull(container);
   }
 
@@ -52,7 +52,8 @@ public class ContainerClient {
    * @return The retrieved {@link Cluster}.
    * @throws IOException When an error occurred attempting to get the cluster.
    */
-  public Cluster getCluster(String projectId, String location, String cluster) throws IOException {
+  public Cluster getCluster(final String projectId, final String location, final String cluster)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(location));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(cluster));
@@ -71,7 +72,7 @@ public class ContainerClient {
    * @return The retrieved list of {@link Cluster} objects.
    * @throws IOException When an error occurred attempting to get the cluster.
    */
-  public List<Cluster> listAllClusters(String projectId) throws IOException {
+  public List<Cluster> listAllClusters(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     List<Cluster> clusters =
         container
@@ -84,11 +85,12 @@ public class ContainerClient {
     return ClientUtil.processResourceList(clusters, Comparator.comparing(Cluster::getName));
   }
 
-  private static String toApiName(String projectId, String location, String clusterName) {
+  private static String toApiName(
+      final String projectId, final String location, final String clusterName) {
     return String.format("projects/%s/locations/%s/clusters/%s", projectId, location, clusterName);
   }
 
-  private static String toApiParent(String projectId) {
+  private static String toApiParent(final String projectId) {
     return String.format("projects/%s/locations/%s", projectId, LOCATION_WILDCARD);
   }
 }

@@ -41,7 +41,7 @@ public class CloudResourceManagerClient {
    * @param cloudResourceManager The {@link CloudResourceManager} instance this class will utilize
    *     for interacting with the Cloud Resource Manager API.
    */
-  public CloudResourceManagerClient(CloudResourceManager cloudResourceManager) {
+  public CloudResourceManagerClient(final CloudResourceManager cloudResourceManager) {
     this.cloudResourceManager = Preconditions.checkNotNull(cloudResourceManager);
   }
 

@@ -59,14 +59,14 @@ public class ComputeClient {
 
   private final Compute compute;
 
-  public ComputeClient(Compute compute) {
+  ComputeClient(final Compute compute) {
     this.compute = compute;
   }
 
   public static List<Metadata.Items> mergeMetadataItems(
-      List<Metadata.Items> winner, List<Metadata.Items> loser) {
+      final List<Metadata.Items> winner, final List<Metadata.Items> loser) {
     if (loser == null) {
-      loser = new ArrayList<>();
+      return winner;
     }
 
     // Remove any existing metadata that has the same key(s) as what we're trying to update/append
@@ -88,31 +88,30 @@ public class ComputeClient {
    * @return
    * @throws IOException
    */
-  public List<Region> getRegions(String projectId) throws IOException {
+  public List<Region> getRegions(final String projectId) throws IOException {
     List<Region> regions = compute.regions().list(projectId).execute().getItems();
     return processResourceList(
         regions, r -> !isDeprecated(r.getDeprecated()), Comparator.comparing(Region::getName));
   }
 
-  public List<Zone> getZones(String projectId, String region) throws IOException {
+  public List<Zone> getZones(final String projectId, final String region) throws IOException {
     List<Zone> zones = compute.zones().list(projectId).execute().getItems();
     return processResourceList(
         zones, z -> region.equalsIgnoreCase(z.getRegion()), Comparator.comparing(Zone::getName));
   }
 
-  public List<MachineType> getMachineTypes(String projectId, String zone) throws IOException {
-    zone = nameFromSelfLink(zone);
+  public List<MachineType> getMachineTypes(final String projectId, final String zone)
+      throws IOException {
     List<MachineType> machineTypes =
-        compute.machineTypes().list(projectId, zone).execute().getItems();
+        compute.machineTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
     return processResourceList(
         machineTypes,
         o -> !isDeprecated(o.getDeprecated()),
         Comparator.comparing(MachineType::getName));
   }
 
-  public List<String> cpuPlatforms(String projectId, String zone) throws IOException {
-    List<String> cpuPlatforms = new ArrayList<String>();
-    zone = nameFromSelfLink(zone);
+  public List<String> cpuPlatforms(final String projectId, final String zone) throws IOException {
+    List<String> cpuPlatforms = new ArrayList<>();
     Zone zoneObject = compute.zones().get(projectId, zone).execute();
     if (zoneObject == null) {
       return cpuPlatforms;
@@ -120,15 +119,14 @@ public class ComputeClient {
     return zoneObject.getAvailableCpuPlatforms();
   }
 
-  public List<DiskType> getDiskTypes(String projectId, String zone) throws IOException {
-    zone = nameFromSelfLink(zone);
+  public List<DiskType> getDiskTypes(final String projectId, final String zone) throws IOException {
     List<DiskType> diskTypes = getDiskTypeList(projectId, zone);
     return processResourceList(
         diskTypes, d -> !isDeprecated(d.getDeprecated()), Comparator.comparing(DiskType::getName));
   }
 
-  public List<DiskType> getBootDiskTypes(String projectId, String zone) throws IOException {
-    zone = nameFromSelfLink(zone);
+  public List<DiskType> getBootDiskTypes(final String projectId, final String zone)
+      throws IOException {
     List<DiskType> diskTypes = this.getDiskTypes(projectId, zone);
 
     // No local disks
@@ -138,52 +136,51 @@ public class ComputeClient {
         Comparator.comparing(DiskType::getName));
   }
 
-  private List<DiskType> getDiskTypeList(String projectId, String zone) throws IOException {
-    return compute.diskTypes().list(projectId, zone).execute().getItems();
+  private List<DiskType> getDiskTypeList(final String projectId, final String zone)
+      throws IOException {
+    return compute.diskTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
   }
 
-  public List<Image> getImages(String projectId) throws IOException {
+  public List<Image> getImages(final String projectId) throws IOException {
     List<Image> images = compute.images().list(projectId).execute().getItems();
     return processResourceList(
         images, i -> !isDeprecated(i.getDeprecated()), Comparator.comparing(Image::getName));
   }
 
-  public Image getImage(String projectId, String name) throws IOException {
+  public Image getImage(final String projectId, final String name) throws IOException {
     Image image = compute.images().get(projectId, name).execute();
 
     return image;
   }
 
-  public List<AcceleratorType> getAcceleratorTypes(String projectId, String zone)
+  public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zone)
       throws IOException {
-    zone = nameFromSelfLink(zone);
-
     List<AcceleratorType> acceleratorTypes =
-        compute.acceleratorTypes().list(projectId, zone).execute().getItems();
+        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
     return processResourceList(
         acceleratorTypes,
         a -> !isDeprecated(a.getDeprecated()),
         Comparator.comparing(AcceleratorType::getName));
   }
 
-  public List<Network> getNetworks(String projectId) throws IOException {
+  public List<Network> getNetworks(final String projectId) throws IOException {
     List<Network> networks = compute.networks().list(projectId).execute().getItems();
     return processResourceList(networks, Comparator.comparing(Network::getName));
   }
 
-  public List<Subnetwork> getSubnetworks(String projectId, String networkSelfLink, String region)
+  public List<Subnetwork> getSubnetworks(
+      final String projectId, final String networkSelfLink, final String region)
       throws IOException {
-    region = nameFromSelfLink(region);
     List<Subnetwork> subnetworks =
-        compute.subnetworks().list(projectId, region).execute().getItems();
+        compute.subnetworks().list(projectId, nameFromSelfLink(region)).execute().getItems();
     return processResourceList(
         subnetworks,
         s -> s.getNetwork().equalsIgnoreCase(networkSelfLink),
         Comparator.comparing(Subnetwork::getName));
   }
 
-  public Operation insertInstance(String projectId, String template, Instance instance)
-      throws IOException {
+  public Operation insertInstance(
+      final String projectId, final String template, final Instance instance) throws IOException {
     final Compute.Instances.Insert insert =
         compute.instances().insert(projectId, instance.getZone(), instance);
     if (!Strings.isNullOrEmpty(template)) {
@@ -192,26 +189,28 @@ public class ComputeClient {
     return insert.execute();
   }
 
-  public Operation terminateInstance(String projectId, String zone, String InstanceId)
-      throws IOException {
-    zone = nameFromSelfLink(zone);
-    return compute.instances().delete(projectId, zone, InstanceId).execute();
+  public Operation terminateInstance(
+      final String projectId, final String zone, final String InstanceId) throws IOException {
+    return compute.instances().delete(projectId, nameFromSelfLink(zone), InstanceId).execute();
   }
 
   public Operation terminateInstanceWithStatus(
-      String projectId, String zone, String instanceId, String desiredStatus)
+      final String projectId,
+      final String zone,
+      final String instanceId,
+      final String desiredStatus)
       throws IOException, InterruptedException {
-    zone = nameFromSelfLink(zone);
-    Instance i = getInstance(projectId, zone, instanceId);
+    final String zoneName = nameFromSelfLink(zone);
+    Instance i = getInstance(projectId, zoneName, instanceId);
     if (i.getStatus().equals(desiredStatus)) {
-      return compute.instances().delete(projectId, zone, instanceId).execute();
+      return compute.instances().delete(projectId, zoneName, instanceId).execute();
     }
     return null;
   }
 
-  public Instance getInstance(String projectId, String zone, String instanceId) throws IOException {
-    zone = nameFromSelfLink(zone);
-    return compute.instances().get(projectId, zone, instanceId).execute();
+  public Instance getInstance(final String projectId, final String zone, final String instanceId)
+      throws IOException {
+    return compute.instances().get(projectId, nameFromSelfLink(zone), instanceId).execute();
   }
 
   /**
@@ -222,8 +221,8 @@ public class ComputeClient {
    * @return
    * @throws IOException
    */
-  public List<Instance> getInstancesWithLabel(String projectId, Map<String, String> labels)
-      throws IOException {
+  public List<Instance> getInstancesWithLabel(
+      final String projectId, final Map<String, String> labels) throws IOException {
     Compute.Instances.AggregatedList request = compute.instances().aggregatedList(projectId);
     request.setFilter(buildLabelsFilterString(labels));
     Map<String, InstancesScopedList> result = request.execute().getItems();
@@ -236,20 +235,21 @@ public class ComputeClient {
     return instances;
   }
 
-  public InstanceTemplate getTemplate(String projectId, String templateName) throws IOException {
+  public InstanceTemplate getTemplate(final String projectId, final String templateName)
+      throws IOException {
     return compute.instanceTemplates().get(projectId, templateName).execute();
   }
 
-  public void insertTemplate(String projectId, InstanceTemplate instanceTemplate)
+  public void insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
     compute.instanceTemplates().insert(projectId, instanceTemplate).execute();
   }
 
-  public void deleteTemplate(String projectId, String templateName) throws IOException {
+  public void deleteTemplate(final String projectId, final String templateName) throws IOException {
     compute.instanceTemplates().delete(projectId, templateName).execute();
   }
 
-  public List<InstanceTemplate> getTemplates(String projectId) throws IOException {
+  public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
     List<InstanceTemplate> instanceTemplates =
         compute.instanceTemplates().list(projectId).execute().getItems();
     return processResourceList(instanceTemplates, Comparator.comparing(InstanceTemplate::getName));
@@ -265,16 +265,16 @@ public class ComputeClient {
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshot(String projectId, String zone, String instanceId)
+  public void createSnapshot(final String projectId, final String zone, final String instanceId)
       throws IOException, InterruptedException {
     try {
-      zone = nameFromSelfLink(zone);
-      Instance instance = compute.instances().get(projectId, zone, instanceId).execute();
+      String zoneName = nameFromSelfLink(zone);
+      Instance instance = compute.instances().get(projectId, zoneName, instanceId).execute();
 
       // TODO: JENKINS-56113 parallelize snapshot creation
       for (AttachedDisk disk : instance.getDisks()) {
         String diskId = nameFromSelfLink(disk.getSource());
-        createSnapshotForDisk(projectId, zone, diskId);
+        createSnapshotForDisk(projectId, zoneName, diskId);
       }
     } catch (InterruptedException ie) {
       // catching InterruptedException here because calling function also can throw
@@ -296,7 +296,7 @@ public class ComputeClient {
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshotForDisk(String projectId, String zone, String diskId)
+  public void createSnapshotForDisk(final String projectId, final String zone, final String diskId)
       throws IOException, InterruptedException {
     Snapshot snapshot = new Snapshot();
     snapshot.setName(diskId);
@@ -314,7 +314,7 @@ public class ComputeClient {
    * @param snapshotName Name of the snapshot to be deleted.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
-  public void deleteSnapshot(String projectId, String snapshotName) throws IOException {
+  public void deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
     compute.snapshots().delete(projectId, snapshotName).execute();
   }
 
@@ -326,7 +326,8 @@ public class ComputeClient {
    * @return Snapshot object with given snapshotName. Null if not found.
    * @throws IOException If an error occurred in retrieving the snapshot.
    */
-  public Snapshot getSnapshot(String projectId, String snapshotName) throws IOException {
+  public Snapshot getSnapshot(final String projectId, final String snapshotName)
+      throws IOException {
     SnapshotList response;
     Compute.Snapshots.List request = compute.snapshots().list(projectId);
 
@@ -356,17 +357,23 @@ public class ComputeClient {
    * @throws InterruptedException
    */
   public Operation.Error appendInstanceMetadata(
-      String projectId, String zone, String instanceId, List<Metadata.Items> items)
+      final String projectId,
+      final String zone,
+      final String instanceId,
+      final List<Metadata.Items> items)
       throws IOException, InterruptedException {
-    zone = nameFromSelfLink(zone);
-    Instance instance = getInstance(projectId, zone, instanceId);
+    String zoneName = nameFromSelfLink(zone);
+    Instance instance = getInstance(projectId, zoneName, instanceId);
     Metadata existingMetadata = instance.getMetadata();
 
     List<Metadata.Items> newMetadataItems = mergeMetadataItems(items, existingMetadata.getItems());
     existingMetadata.setItems(newMetadataItems);
 
     Operation op =
-        compute.instances().setMetadata(projectId, zone, instanceId, existingMetadata).execute();
+        compute
+            .instances()
+            .setMetadata(projectId, zoneName, instanceId, existingMetadata)
+            .execute();
     return waitForOperationCompletion(projectId, op.getName(), op.getZone(), 60 * 1000);
   }
 
@@ -382,7 +389,7 @@ public class ComputeClient {
    * @throws InterruptedException
    */
   public Operation.Error waitForOperationCompletion(
-      String projectId, String operationId, String zone, long timeout)
+      final String projectId, final String operationId, final String zone, final long timeout)
       throws IOException, InterruptedException {
     if (Strings.isNullOrEmpty(operationId)) {
       throw new IllegalArgumentException("Operation ID can not be null");
@@ -390,12 +397,9 @@ public class ComputeClient {
     if (Strings.isNullOrEmpty(zone)) {
       throw new IllegalArgumentException("Zone can not be null");
     }
-    if (zone != null) {
-      String[] bits = zone.split("/");
-      zone = bits[bits.length - 1];
-    }
+    String zoneName = nameFromSelfLink(zone);
 
-    Operation operation = compute.zoneOperations().get(projectId, zone, operationId).execute();
+    Operation operation = compute.zoneOperations().get(projectId, zoneName, operationId).execute();
     long start = System.currentTimeMillis();
     final long POLL_INTERVAL = 5 * 1000;
 
@@ -407,13 +411,9 @@ public class ComputeClient {
         throw new InterruptedException("Timed out waiting for operation to complete");
       }
       LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete..");
-      if (zone != null) {
-        Compute.ZoneOperations.Get get = compute.zoneOperations().get(projectId, zone, operationId);
-        operation = get.execute();
-      } else {
-        Compute.GlobalOperations.Get get = compute.globalOperations().get(projectId, operationId);
-        operation = get.execute();
-      }
+      Compute.ZoneOperations.Get get =
+          compute.zoneOperations().get(projectId, zoneName, operationId);
+      operation = get.execute();
       if (operation != null) {
         status = operation.getStatus();
       }
@@ -421,7 +421,7 @@ public class ComputeClient {
     return operation.getError();
   }
 
-  private static boolean isDeprecated(DeprecationStatus deprecated) {
+  private static boolean isDeprecated(final DeprecationStatus deprecated) {
     return deprecated != null && deprecated.getState().equalsIgnoreCase("DEPRECATED");
   }
 }
