@@ -52,7 +52,7 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
- * Client for communicating with the Google Compute API
+ * Client for communicating with the Google Compute API.
  *
  * @see <a href="https://cloud.google.com/compute/">Compute Engine</a>
  */
@@ -98,7 +98,7 @@ public class ComputeClient {
    * @return A sorted list of available {@link Region}s. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of regions.
    */
-  public List<Region> getRegions(final String projectId) throws IOException {
+  public List<Region> listRegions(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listRegions(projectId),
@@ -114,7 +114,7 @@ public class ComputeClient {
    * @return A list of available {@link Zone}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of zones.
    */
-  public List<Zone> getZones(final String projectId, final String regionLink) throws IOException {
+  public List<Zone> listZones(final String projectId, final String regionLink) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
@@ -131,7 +131,7 @@ public class ComputeClient {
    * @return A list of available {@link MachineType}s sorted by name. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<MachineType> getMachineTypes(final String projectId, final String zoneLink)
+  public List<MachineType> listMachineTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -149,7 +149,7 @@ public class ComputeClient {
    * @return A sorted list of strings with the available CPU platforms.
    * @throws IOException An error occurred attempting to get the list of CPU platforms.
    */
-  public List<String> getCpuPlatforms(final String projectId, final String zoneLink)
+  public List<String> listCpuPlatforms(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -166,7 +166,7 @@ public class ComputeClient {
    * @return A sorted list of available {@link DiskType}s. Deprecated disks are excluded.
    * @throws IOException An error occurred attempting to get the list of disk types.
    */
-  public List<DiskType> getDiskTypes(final String projectId, final String zoneLink)
+  public List<DiskType> listDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -185,7 +185,7 @@ public class ComputeClient {
    *     excluded.
    * @throws IOException An error occurred attempting to get the list of disk types.
    */
-  public List<DiskType> getBootDiskTypes(final String projectId, final String zoneLink)
+  public List<DiskType> listBootDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -203,7 +203,7 @@ public class ComputeClient {
    * @return A list of available {@link Image}s. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of images.
    */
-  public List<Image> getImages(final String projectId) throws IOException {
+  public List<Image> listImages(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listImages(projectId),
@@ -234,7 +234,7 @@ public class ComputeClient {
    *     excluded.
    * @throws IOException An error occurred attempting to get the list of accelerator types.
    */
-  public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zoneLink)
+  public List<AcceleratorType> listAcceleratorTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -251,7 +251,7 @@ public class ComputeClient {
    * @return A list of available {@link Network}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of networks.
    */
-  public List<Network> getNetworks(final String projectId) throws IOException {
+  public List<Network> listNetworks(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listNetworks(projectId), Comparator.comparing(Network::getName));
@@ -266,7 +266,7 @@ public class ComputeClient {
    * @return A list of available {@link Subnetwork}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<Subnetwork> getSubnetworks(
+  public List<Subnetwork> listSubnetworks(
       final String projectId, final String networkLink, final String regionLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -279,7 +279,8 @@ public class ComputeClient {
   }
 
   /**
-   * Inserts the provided instance into the given project.
+   * Inserts the provided instance into the given project. This method does not block on the
+   * completion of the operation.
    *
    * @param projectId The ID of the project where the instance will reside.
    * @param templateLink A self link to an instance template that may be optionally specified to use
@@ -302,7 +303,8 @@ public class ComputeClient {
   }
 
   /**
-   * Deletes the {@link Instance} specified with the given ID in the project and zone.
+   * Deletes the {@link Instance} specified with the given ID in the project and zone. This method
+   * does not block on the completion of the operation.
    *
    * @param projectId The ID of the project where the instance resides.
    * @param zoneLink The self link of the zone where the instance resides.
@@ -310,7 +312,7 @@ public class ComputeClient {
    * @return The deletion {@link Operation} for tracking the status of deleting the instance.
    * @throws IOException There was an error attempting to delete the instance.
    */
-  public Operation terminateInstance(
+  public Operation terminateInstanceAsync(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -320,7 +322,7 @@ public class ComputeClient {
 
   /**
    * Deletes the {@link Instance} specified with the given ID in the project and zone if it has the
-   * provided status.
+   * provided status. This method does not block on the completion of the operation.
    *
    * @param projectId The ID of the project where the instance resides.
    * @param zoneLink The self link of the zone where the instance resides.
@@ -331,7 +333,7 @@ public class ComputeClient {
    * @throws IOException There was an error attempting to get the instance status or delete the
    *     instance.
    */
-  public Optional<Operation> terminateInstanceWithStatus(
+  public Optional<Operation> terminateInstanceWithStatusAsync(
       final String projectId,
       final String zoneLink,
       final String instanceId,
@@ -374,16 +376,16 @@ public class ComputeClient {
    * @return A list of {@link Instance}s.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<Instance> getInstancesWithLabel(
+  public List<Instance> listInstancesWithLabel(
       final String projectId, final Map<String, String> labels) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(labels);
     Map<String, InstancesScopedList> result =
         compute.aggregatedListInstances(projectId, buildLabelsFilterString(labels));
     List<Instance> instances = new ArrayList<>();
-    for (InstancesScopedList instancesInZone : result.values()) {
-      if (instancesInZone.getInstances() != null) {
-        instances.addAll(instancesInZone.getInstances());
+    for (InstancesScopedList matchingInstances : result.values()) {
+      if (matchingInstances.getInstances() != null) {
+        instances.addAll(matchingInstances.getInstances());
       }
     }
     return instances;
@@ -405,7 +407,8 @@ public class ComputeClient {
   }
 
   /**
-   * Inserts the provided instance into the given project.
+   * Inserts the provided instance into the given project. This method does not block on the
+   * completion of the operation.
    *
    * @param projectId The ID of the project where the instance template will reside.
    * @param instanceTemplate An {@link InstanceTemplate} to insert.
@@ -413,7 +416,7 @@ public class ComputeClient {
    *     template.
    * @throws IOException There was an error attempting to insert the instance template.
    */
-  public Operation insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
+  public Operation insertTemplateAsync(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instanceTemplate);
@@ -421,7 +424,8 @@ public class ComputeClient {
   }
 
   /**
-   * Deletes the {@link InstanceTemplate} with the given name in the given project.
+   * Deletes the {@link InstanceTemplate} with the given name in the given project. This method does
+   * not block on the completion of the operation.
    *
    * @param projectId The ID of the project where the instance template resides.
    * @param templateName The name of the instance template to delete.
@@ -429,7 +433,7 @@ public class ComputeClient {
    *     template.
    * @throws IOException There was an error attempting to delete the instance template.
    */
-  public Operation deleteTemplate(final String projectId, final String templateName)
+  public Operation deleteTemplateAsync(final String projectId, final String templateName)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
@@ -443,7 +447,7 @@ public class ComputeClient {
    * @return A list of available {@link InstanceTemplate}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of instance templates.
    */
-  public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
+  public List<InstanceTemplate> listTemplates(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listInstanceTemplates(projectId), Comparator.comparing(InstanceTemplate::getName));
@@ -453,14 +457,14 @@ public class ComputeClient {
    * Creates persistent disk snapshot for Compute Engine instance. This method blocks until the
    * operation completes.
    *
-   * @param projectId Google cloud project id (e.g. my-project).
+   * @param projectId The ID of the project where instance resides.
    * @param zoneLink Self link of the instance's zone.
    * @param instanceId Name of the instance whose disks to take a snapshot of.
    * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation or in retrieving the instance.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshot(
+  public void createSnapshotSync(
       final String projectId, final String zoneLink, final String instanceId, final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -484,7 +488,7 @@ public class ComputeClient {
                 .wrap(
                     disk -> {
                       try {
-                        createSnapshotForDisk(
+                        createSnapshotForDiskSync(
                             projectId, zoneName, nameFromSelfLink(disk.getSource()), timeout);
                       } catch (IOException ioe) {
                         LOGGER.log(Level.WARNING, "Error in creating snapshot.", ioe);
@@ -499,16 +503,17 @@ public class ComputeClient {
   }
 
   /**
-   * Given a disk's name, create a snapshot for said disk.
+   * Given a disk's name, create a snapshot for said disk. This method blocks until the operation
+   * complete.
    *
-   * @param projectId Google cloud project id.
+   * @param projectId The ID of the project where the disk resides.
    * @param zoneName Zone of disk.
    * @param diskName Name of disk to create a snapshot for.
    * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public Operation.Error createSnapshotForDisk(
+  public Operation.Error createSnapshotForDiskSync(
       final String projectId, final String zoneName, final String diskName, final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -526,11 +531,11 @@ public class ComputeClient {
   /**
    * Deletes persistent disk snapshot. Does not block.
    *
-   * @param projectId Google cloud project id.
+   * @param projectId The ID of the project where the snapshot resides.
    * @param snapshotName Name of the snapshot to be deleted.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
-  public Operation deleteSnapshot(final String projectId, final String snapshotName)
+  public Operation deleteSnapshotAsync(final String projectId, final String snapshotName)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
@@ -538,9 +543,9 @@ public class ComputeClient {
   }
 
   /**
-   * Returns snapshot with name snapshotName
+   * Returns snapshot with name snapshotName.
    *
-   * @param projectId Google cloud project id.
+   * @param projectId The ID of the project where the project resides.
    * @param snapshotName Name of the snapshot to get.
    * @return Snapshot object with given snapshotName. Null if not found.
    * @throws IOException If an error occurred in retrieving the snapshot.
@@ -581,7 +586,7 @@ public class ComputeClient {
    * @throws IOException If there was an error retrieving the instance.
    * @throws InterruptedException If the operation to set metadata timed out.
    */
-  public Operation.Error appendInstanceMetadata(
+  public Operation.Error appendInstanceMetadataSync(
       final String projectId,
       final String zoneLink,
       final String instanceId,
@@ -638,7 +643,7 @@ public class ComputeClient {
           // Awaitility requires a function without arguments, so cannot use helper method here.
           .until(
               () -> {
-                LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete..");
+                LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete.");
                 try {
                   Operation op = getZoneOperation(projectId, zoneLink, operationId);
                   // Store the error here.
@@ -650,7 +655,7 @@ public class ComputeClient {
                 }
               });
     } catch (ConditionTimeoutException e) {
-      throw new InterruptedException("Timed out waiting for operation to complete");
+      throw new InterruptedException("Timed out waiting for operation to complete.");
     }
     return operation.getError();
   }

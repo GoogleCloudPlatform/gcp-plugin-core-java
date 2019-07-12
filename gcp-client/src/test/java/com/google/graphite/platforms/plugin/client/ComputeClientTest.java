@@ -91,8 +91,8 @@ public class ComputeClientTest {
             .setName("us-east1")
             .setDeprecated(new DeprecationStatus().setState("DEPRECATED")));
 
-    assertEquals(3, computeClient.getRegions(TEST_PROJECT_ID).size());
-    assertEquals("eu-central1", computeClient.getRegions(TEST_PROJECT_ID).get(0).getName());
+    assertEquals(3, computeClient.listRegions(TEST_PROJECT_ID).size());
+    assertEquals("eu-central1", computeClient.listRegions(TEST_PROJECT_ID).get(0).getName());
   }
 
   @Test
@@ -102,12 +102,12 @@ public class ComputeClientTest {
     listOfZones.add(new Zone().setRegion("eu-central1").setName("eu-central1-a"));
     listOfZones.add(new Zone().setRegion("us-west1").setName("us-west1-a"));
 
-    assertEquals(2, computeClient.getZones(TEST_PROJECT_ID, "us-west1").size());
+    assertEquals(2, computeClient.listZones(TEST_PROJECT_ID, "us-west1").size());
     assertEquals(
-        "us-west1-a", computeClient.getZones(TEST_PROJECT_ID, "us-west1").get(0).getName());
+        "us-west1-a", computeClient.listZones(TEST_PROJECT_ID, "us-west1").get(0).getName());
 
     listOfZones.clear();
-    assertEquals(0, computeClient.getZones(TEST_PROJECT_ID, "us-west1").size());
+    assertEquals(0, computeClient.listZones(TEST_PROJECT_ID, "us-west1").size());
   }
 
   @Test
@@ -121,8 +121,8 @@ public class ComputeClientTest {
             .setName("d")
             .setDeprecated(new DeprecationStatus().setState("DEPRECATED")));
 
-    assertEquals(3, computeClient.getMachineTypes(TEST_PROJECT_ID, "test").size());
-    assertEquals("a", computeClient.getMachineTypes(TEST_PROJECT_ID, "test").get(0).getName());
+    assertEquals(3, computeClient.listMachineTypes(TEST_PROJECT_ID, "test").size());
+    assertEquals("a", computeClient.listMachineTypes(TEST_PROJECT_ID, "test").get(0).getName());
   }
 
   @Test
@@ -135,8 +135,8 @@ public class ComputeClientTest {
     listOfDiskTypes.add(
         new DiskType().setName("d").setDeprecated(new DeprecationStatus().setState("DEPRECATED")));
 
-    assertEquals(3, computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").size());
-    assertEquals("a", computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").get(0).getName());
+    assertEquals(3, computeClient.listBootDiskTypes(TEST_PROJECT_ID, "test").size());
+    assertEquals("a", computeClient.listBootDiskTypes(TEST_PROJECT_ID, "test").get(0).getName());
   }
 
   @Test
@@ -155,14 +155,14 @@ public class ComputeClientTest {
 
   @Test
   public void getTemplates() throws IOException {
-    assertEquals(0, computeClient.getTemplates(TEST_PROJECT_ID).size());
+    assertEquals(0, computeClient.listTemplates(TEST_PROJECT_ID).size());
 
     listOfInstanceTemplate.add(new InstanceTemplate().setName("z"));
     listOfInstanceTemplate.add(new InstanceTemplate().setName("a"));
     listOfInstanceTemplate.add(new InstanceTemplate().setName("c"));
 
-    assertEquals(3, computeClient.getTemplates(TEST_PROJECT_ID).size());
-    assertEquals("a", computeClient.getTemplates(TEST_PROJECT_ID).get(0).getName());
+    assertEquals(3, computeClient.listTemplates(TEST_PROJECT_ID).size());
+    assertEquals("a", computeClient.listTemplates(TEST_PROJECT_ID).get(0).getName());
   }
 
   @Test

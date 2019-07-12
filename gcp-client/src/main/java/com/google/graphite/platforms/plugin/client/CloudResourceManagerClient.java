@@ -46,10 +46,10 @@ public class CloudResourceManagerClient {
   /**
    * Retrieves a list of Projects for the credentials associated with this client.
    *
-   * @return The retrieved list of projects
+   * @return The retrieved list of projects.
    * @throws IOException When an error occurred attempting to get the projects.
    */
-  public ImmutableList<Project> getAccountProjects() throws IOException {
+  public ImmutableList<Project> listProjects() throws IOException {
     return processResourceList(
         cloudResourceManager.listProjects(), Comparator.comparing(Project::getProjectId));
   }
