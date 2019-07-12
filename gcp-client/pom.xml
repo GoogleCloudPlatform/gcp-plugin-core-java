@@ -31,6 +31,7 @@
     <container.revision>57</container.revision>
     <compute.revision>214</compute.revision>
     <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
+    <durian.version>3.4.0</durian.version>
   </properties>
 
   <dependencies>
@@ -53,6 +54,11 @@
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
       <version>${google.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.diffplug.durian</groupId>
+      <artifactId>durian</artifactId>
+      <version>${durian.version}</version>
     </dependency>
   </dependencies>
 </project>

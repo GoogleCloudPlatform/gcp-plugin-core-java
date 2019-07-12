@@ -20,9 +20,9 @@ import static com.google.graphite.platforms.plugin.client.util.ClientUtil.buildL
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
+import com.diffplug.common.base.Errors;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.AcceleratorType;
-import com.google.api.services.compute.model.AttachedDisk;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
 import com.google.api.services.compute.model.Image;
@@ -253,29 +253,40 @@ public class ComputeClient {
    * @param projectId Google cloud project id (e.g. my-project).
    * @param zone Instance's zone.
    * @param instanceId Name of the instance whose disks to take a snapshot of.
-   * @throws IOException If an error occured in snapshot creation.
+   * @throws IOException If an error occured in snapshot creation or in retrieving the instance.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
   public void createSnapshot(final String projectId, final String zone, final String instanceId)
       throws IOException, InterruptedException {
+    String zoneName = nameFromSelfLink(zone);
+    Instance instance;
     try {
-      String zoneName = nameFromSelfLink(zone);
-      Instance instance = compute.instances().get(projectId, zoneName, instanceId).execute();
-
-      // TODO: JENKINS-56113 parallelize snapshot creation
-      for (AttachedDisk disk : instance.getDisks()) {
-        String diskId = nameFromSelfLink(disk.getSource());
-        createSnapshotForDisk(projectId, zoneName, diskId);
-      }
-    } catch (InterruptedException ie) {
-      // catching InterruptedException here because calling function also can throw
-      // InterruptedException from trying to terminate node
-      LOGGER.log(Level.WARNING, "Error in creating snapshot.", ie);
-      throw ie;
+      instance = compute.instances().get(projectId, zoneName, instanceId).execute();
     } catch (IOException ioe) {
-      LOGGER.log(Level.WARNING, "Interruption in creating snapshot.", ioe);
+      LOGGER.log(Level.WARNING, "Error retrieving instance.", ioe);
       throw ioe;
     }
+
+    instance
+        .getDisks()
+        .parallelStream()
+        .forEach(
+            Errors.rethrow()
+                .wrap(
+                    disk -> {
+                      try {
+                        createSnapshotForDisk(
+                            projectId, zoneName, nameFromSelfLink(disk.getSource()));
+                      } catch (IOException ioe) {
+                        LOGGER.log(Level.WARNING, "Error in creating snapshot.", ioe);
+                        throw ioe;
+                      } catch (InterruptedException ie) {
+                        /* catching InterruptedException here because calling function also can
+                         * throw InterruptedException from trying to terminate node */
+                        LOGGER.log(Level.WARNING, "Interruption in creating snapshot.", ie);
+                        throw ie;
+                      }
+                    }));
   }
 
   /**
