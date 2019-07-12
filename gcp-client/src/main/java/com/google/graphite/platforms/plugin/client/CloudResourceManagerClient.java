@@ -18,7 +18,6 @@ package com.google.graphite.platforms.plugin.client;
 
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
-import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.model.Project;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -32,15 +31,15 @@ import java.util.Comparator;
  *     API</a>
  */
 public class CloudResourceManagerClient {
-  private final CloudResourceManager cloudResourceManager;
+  private final CloudResourceManagerWrapper cloudResourceManager;
 
   /**
    * Constructs a new {@link CloudResourceManagerClient} instance.
    *
-   * @param cloudResourceManager The {@link CloudResourceManager} instance this class will utilize
-   *     for interacting with the Cloud Resource Manager API.
+   * @param cloudResourceManager The {@link CloudResourceManagerWrapper} instance this class will
+   *     utilize for interacting with the Cloud Resource Manager API.
    */
-  public CloudResourceManagerClient(final CloudResourceManager cloudResourceManager) {
+  public CloudResourceManagerClient(final CloudResourceManagerWrapper cloudResourceManager) {
     this.cloudResourceManager = Preconditions.checkNotNull(cloudResourceManager);
   }
 
@@ -52,7 +51,6 @@ public class CloudResourceManagerClient {
    */
   public ImmutableList<Project> getAccountProjects() throws IOException {
     return processResourceList(
-        cloudResourceManager.projects().list().execute().getProjects(),
-        Comparator.comparing(Project::getProjectId));
+        cloudResourceManager.listProjects(), Comparator.comparing(Project::getProjectId));
   }
 }

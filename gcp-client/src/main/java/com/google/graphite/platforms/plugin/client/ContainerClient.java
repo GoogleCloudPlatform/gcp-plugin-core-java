@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class ContainerClient {
   private static final String LOCATION_WILDCARD = "-";
-  private final Container container;
+  private final ContainerWrapper container;
 
   /**
    * Constructs a new {@link ContainerClient} instance.
@@ -40,7 +40,7 @@ public class ContainerClient {
    * @param container The {@link Container} instance this class will utilize for interacting with
    *     the GKE API.
    */
-  public ContainerClient(final Container container) {
+  public ContainerClient(final ContainerWrapper container) {
     this.container = Preconditions.checkNotNull(container);
   }
 
@@ -58,12 +58,7 @@ public class ContainerClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(location));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(cluster));
-    return container
-        .projects()
-        .locations()
-        .clusters()
-        .get(toApiName(projectId, location, cluster))
-        .execute();
+    return container.getCluster(projectId, location, cluster);
   }
 
   /**
@@ -76,22 +71,7 @@ public class ContainerClient {
   public List<Cluster> listAllClusters(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        container
-            .projects()
-            .locations()
-            .clusters()
-            .list(toApiParent(projectId))
-            .execute()
-            .getClusters(),
+        container.listClusters(projectId, LOCATION_WILDCARD),
         Comparator.comparing(Cluster::getName));
-  }
-
-  private static String toApiName(
-      final String projectId, final String location, final String clusterName) {
-    return String.format("projects/%s/locations/%s/clusters/%s", projectId, location, clusterName);
-  }
-
-  private static String toApiParent(final String projectId) {
-    return String.format("projects/%s/locations/%s", projectId, LOCATION_WILDCARD);
   }
 }

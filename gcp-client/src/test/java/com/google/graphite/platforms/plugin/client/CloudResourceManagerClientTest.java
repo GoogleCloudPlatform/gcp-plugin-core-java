@@ -19,9 +19,6 @@ package com.google.graphite.platforms.plugin.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.google.api.services.cloudresourcemanager.CloudResourceManager;
-import com.google.api.services.cloudresourcemanager.CloudResourceManager.Projects;
-import com.google.api.services.cloudresourcemanager.model.ListProjectsResponse;
 import com.google.api.services.cloudresourcemanager.model.Project;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -83,27 +80,20 @@ public class CloudResourceManagerClientTest {
 
   private static CloudResourceManagerClient setUpClient(
       List<String> initial, IOException ioException) throws IOException {
-    CloudResourceManager cloudResourceManager = Mockito.mock(CloudResourceManager.class);
-    Projects projects = Mockito.mock(Projects.class);
-    Mockito.when(cloudResourceManager.projects()).thenReturn(projects);
-    Projects.List projectsListCall = Mockito.mock(Projects.List.class);
-    Mockito.when(projects.list()).thenReturn(projectsListCall);
-
+    CloudResourceManagerWrapper cloudResourceManager =
+        Mockito.mock(CloudResourceManagerWrapper.class);
     if (ioException != null) {
-      Mockito.when(projectsListCall.execute()).thenThrow(ioException);
-    } else if (initial == null) {
-      Mockito.when(projectsListCall.execute())
-          .thenReturn(new ListProjectsResponse().setProjects(null));
+      Mockito.when(cloudResourceManager.listProjects()).thenThrow(ioException);
     } else {
-      List<Project> projectList = initProjectList(initial);
-      Mockito.when(projectsListCall.execute())
-          .thenReturn(new ListProjectsResponse().setProjects(projectList));
+      Mockito.when(cloudResourceManager.listProjects()).thenReturn(initProjectList(initial));
     }
-
     return new CloudResourceManagerClient(cloudResourceManager);
   }
 
   private static List<Project> initProjectList(List<String> projectIds) {
+    if (projectIds == null) {
+      return null;
+    }
     List<Project> projects = new ArrayList<>();
     projectIds.forEach(id -> projects.add(new Project().setProjectId(id)));
     return projects;

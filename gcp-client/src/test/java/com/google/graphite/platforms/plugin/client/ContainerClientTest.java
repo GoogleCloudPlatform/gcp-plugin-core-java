@@ -18,10 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 
-import com.google.api.services.container.Container;
-import com.google.api.services.container.Container.Projects.Locations.Clusters;
 import com.google.api.services.container.model.Cluster;
-import com.google.api.services.container.model.ListClustersResponse;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -146,54 +143,39 @@ public class ContainerClientTest {
   }
 
   private static List<Cluster> initClusterList(List<String> clusterNames) {
+    if (clusterNames == null) {
+      return null;
+    }
     List<Cluster> clusters = new ArrayList<>();
     clusterNames.forEach(e -> clusters.add(new Cluster().setName(e).setLocation(TEST_LOCATION)));
     return clusters;
   }
 
-  private static ContainerClient setUpClient(Clusters.List listCall, Clusters.Get getCall)
-      throws IOException {
-    Container container = Mockito.mock(Container.class);
-    Container.Projects projects = Mockito.mock(Container.Projects.class);
-    Container.Projects.Locations locations = Mockito.mock(Container.Projects.Locations.class);
-    Clusters clusters = Mockito.mock(Container.Projects.Locations.Clusters.class);
-    Mockito.when(container.projects()).thenReturn(projects);
-    Mockito.when(projects.locations()).thenReturn(locations);
-    Mockito.when(locations.clusters()).thenReturn(clusters);
-    if (getCall != null) {
-      Mockito.when(clusters.get(anyString())).thenReturn(getCall);
-    }
-    if (listCall != null) {
-      Mockito.when(clusters.list(anyString())).thenReturn(listCall);
-    }
-    return new ContainerClient(container);
-  }
-
   private static ContainerClient setUpGetClient(String clusterName, IOException ioException)
       throws IOException {
-    Clusters.Get getCall = Mockito.mock(Clusters.Get.class);
-    ContainerClient client = setUpClient(null, getCall);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient client = new ContainerClient(container);
 
     if (ioException != null) {
-      Mockito.when(getCall.execute()).thenThrow(ioException);
+      Mockito.when(container.getCluster(anyString(), anyString(), anyString()))
+          .thenThrow(ioException);
     } else {
-      Mockito.when(getCall.execute()).thenReturn(new Cluster().setName(clusterName));
+      Mockito.when(container.getCluster(anyString(), anyString(), anyString()))
+          .thenReturn(new Cluster().setName(clusterName));
     }
     return client;
   }
 
   private static ContainerClient setUpListClient(List<String> clusters, IOException ioException)
       throws IOException {
-    Clusters.List listCall = Mockito.mock(Clusters.List.class);
-    ContainerClient client = setUpClient(listCall, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient client = new ContainerClient(container);
 
     if (ioException != null) {
-      Mockito.when(listCall.execute()).thenThrow(ioException);
-    } else if (clusters == null) {
-      Mockito.when(listCall.execute()).thenReturn(new ListClustersResponse().setClusters(null));
+      Mockito.when(container.listClusters(anyString(), anyString())).thenThrow(ioException);
     } else {
-      Mockito.when(listCall.execute())
-          .thenReturn(new ListClustersResponse().setClusters(initClusterList(clusters)));
+      Mockito.when(container.listClusters(anyString(), anyString()))
+          .thenReturn(initClusterList(clusters));
     }
     return client;
   }

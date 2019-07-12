@@ -58,18 +58,20 @@ public class ClientFactory {
 
   public CloudResourceManagerClient cloudResourceManagerClient() {
     return new CloudResourceManagerClient(
-        new CloudResourceManager.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(this::initializeRequest)
-            .setApplicationName(applicationName)
-            .build());
+        new CloudResourceManagerWrapper(
+            new CloudResourceManager.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
   }
 
   public ContainerClient containerClient() {
     return new ContainerClient(
-        new Container.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(this::initializeRequest)
-            .setApplicationName(applicationName)
-            .build());
+        new ContainerWrapper(
+            new Container.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
   }
 
   private void initializeRequest(final AbstractGoogleClientRequest request) {
