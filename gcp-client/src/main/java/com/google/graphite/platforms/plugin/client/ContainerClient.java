@@ -20,9 +20,9 @@ import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * Client for communicating with the Google GKE API.
@@ -65,10 +65,10 @@ public class ContainerClient {
    * Retrieves a list of all {@link Cluster} objects for the project from the container client.
    *
    * @param projectId The ID of the project the clusters reside in.
-   * @return The retrieved list of {@link Cluster} objects.
+   * @return The retrieved list of {@link Cluster}s sorted by name.
    * @throws IOException When an error occurred attempting to get the list of clusters.
    */
-  public List<Cluster> listAllClusters(final String projectId) throws IOException {
+  public ImmutableList<Cluster> listAllClusters(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         container.listClusters(projectId, LOCATION_WILDCARD),

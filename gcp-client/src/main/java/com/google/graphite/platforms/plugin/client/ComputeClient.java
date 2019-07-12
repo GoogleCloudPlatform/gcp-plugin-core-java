@@ -75,7 +75,7 @@ public class ComputeClient {
    *     used.
    * @return The combined list of items from the input lists.
    */
-  public static List<Metadata.Items> mergeMetadataItems(
+  public static ImmutableList<Metadata.Items> mergeMetadataItems(
       final List<Metadata.Items> winner, final List<Metadata.Items> loser) {
     if (loser == null) {
       return ImmutableList.copyOf(winner);
@@ -99,7 +99,7 @@ public class ComputeClient {
    * @return A sorted list of available {@link Region}s. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of regions.
    */
-  public List<Region> listRegions(final String projectId) throws IOException {
+  public ImmutableList<Region> listRegions(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listRegions(projectId),
@@ -115,7 +115,8 @@ public class ComputeClient {
    * @return A list of available {@link Zone}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of zones.
    */
-  public List<Zone> listZones(final String projectId, final String regionLink) throws IOException {
+  public ImmutableList<Zone> listZones(final String projectId, final String regionLink)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
@@ -132,7 +133,7 @@ public class ComputeClient {
    * @return A list of available {@link MachineType}s sorted by name. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<MachineType> listMachineTypes(final String projectId, final String zoneLink)
+  public ImmutableList<MachineType> listMachineTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -150,7 +151,7 @@ public class ComputeClient {
    * @return A sorted list of strings with the available CPU platforms.
    * @throws IOException An error occurred attempting to get the list of CPU platforms.
    */
-  public List<String> listCpuPlatforms(final String projectId, final String zoneLink)
+  public ImmutableList<String> listCpuPlatforms(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -167,7 +168,7 @@ public class ComputeClient {
    * @return A sorted list of available {@link DiskType}s. Deprecated disks are excluded.
    * @throws IOException An error occurred attempting to get the list of disk types.
    */
-  public List<DiskType> listDiskTypes(final String projectId, final String zoneLink)
+  public ImmutableList<DiskType> listDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -186,7 +187,7 @@ public class ComputeClient {
    *     excluded.
    * @throws IOException An error occurred attempting to get the list of disk types.
    */
-  public List<DiskType> listBootDiskTypes(final String projectId, final String zoneLink)
+  public ImmutableList<DiskType> listBootDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
@@ -204,7 +205,7 @@ public class ComputeClient {
    * @return A list of available {@link Image}s. Deprecated items are excluded.
    * @throws IOException An error occurred attempting to get the list of images.
    */
-  public List<Image> listImages(final String projectId) throws IOException {
+  public ImmutableList<Image> listImages(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listImages(projectId),
@@ -235,8 +236,8 @@ public class ComputeClient {
    *     excluded.
    * @throws IOException An error occurred attempting to get the list of accelerator types.
    */
-  public List<AcceleratorType> listAcceleratorTypes(final String projectId, final String zoneLink)
-      throws IOException {
+  public ImmutableList<AcceleratorType> listAcceleratorTypes(
+      final String projectId, final String zoneLink) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
@@ -252,7 +253,7 @@ public class ComputeClient {
    * @return A list of available {@link Network}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of networks.
    */
-  public List<Network> listNetworks(final String projectId) throws IOException {
+  public ImmutableList<Network> listNetworks(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listNetworks(projectId), Comparator.comparing(Network::getName));
@@ -267,7 +268,7 @@ public class ComputeClient {
    * @return A list of available {@link Subnetwork}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<Subnetwork> listSubnetworks(
+  public ImmutableList<Subnetwork> listSubnetworks(
       final String projectId, final String networkLink, final String regionLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -377,7 +378,7 @@ public class ComputeClient {
    * @return A list of {@link Instance}s.
    * @throws IOException An error occurred attempting to get the list of machine types.
    */
-  public List<Instance> listInstancesWithLabel(
+  public ImmutableList<Instance> listInstancesWithLabel(
       final String projectId, final Map<String, String> labels) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(labels);
@@ -389,7 +390,7 @@ public class ComputeClient {
         instances.addAll(matchingInstances.getInstances());
       }
     }
-    return instances;
+    return ImmutableList.copyOf(instances);
   }
 
   /**
@@ -448,7 +449,7 @@ public class ComputeClient {
    * @return A list of available {@link InstanceTemplate}s sorted by name.
    * @throws IOException An error occurred attempting to get the list of instance templates.
    */
-  public List<InstanceTemplate> listTemplates(final String projectId) throws IOException {
+  public ImmutableList<InstanceTemplate> listTemplates(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listInstanceTemplates(projectId), Comparator.comparing(InstanceTemplate::getName));
