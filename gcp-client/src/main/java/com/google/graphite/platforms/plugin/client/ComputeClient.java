@@ -60,10 +60,10 @@ import org.awaitility.core.ConditionTimeoutException;
 public class ComputeClient {
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
 
-  private final Compute compute;
+  private final ComputeWrapper compute;
 
   ComputeClient(final Compute compute) {
-    this.compute = compute;
+    this.compute = new ComputeWrapper(compute);
   }
 
   public static List<Metadata.Items> mergeMetadataItems(
@@ -90,7 +90,7 @@ public class ComputeClient {
   public List<Region> getRegions(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        compute.regions().list(projectId).execute().getItems(),
+        compute.listRegions(projectId),
         r -> !isDeprecated(r.getDeprecated()),
         Comparator.comparing(Region::getName));
   }
@@ -99,7 +99,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
-        compute.zones().list(projectId).execute().getItems(),
+        compute.listZones(projectId),
         z -> regionLink.equalsIgnoreCase(z.getRegion()),
         Comparator.comparing(Zone::getName));
   }
@@ -109,7 +109,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        compute.machineTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems(),
+        compute.listMachineTypes(projectId, nameFromSelfLink(zoneLink)),
         o -> !isDeprecated(o.getDeprecated()),
         Comparator.comparing(MachineType::getName));
   }
@@ -119,11 +119,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        compute
-            .zones()
-            .get(projectId, nameFromSelfLink(zoneLink))
-            .execute()
-            .getAvailableCpuPlatforms(),
+        compute.getZone(projectId, nameFromSelfLink(zoneLink)).getAvailableCpuPlatforms(),
         String::compareTo);
   }
 
@@ -132,7 +128,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        getDiskTypeList(projectId, zoneLink),
+        compute.listDiskTypes(projectId, nameFromSelfLink(zoneLink)),
         d -> !isDeprecated(d.getDeprecated()),
         Comparator.comparing(DiskType::getName));
   }
@@ -142,21 +138,16 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        this.getDiskTypeList(projectId, zoneLink),
+        compute.listDiskTypes(projectId, nameFromSelfLink(zoneLink)),
         // No local disks
         d -> !isDeprecated(d.getDeprecated()) && !d.getName().startsWith("local-"),
         Comparator.comparing(DiskType::getName));
   }
 
-  private List<DiskType> getDiskTypeList(final String projectId, final String zoneLink)
-      throws IOException {
-    return compute.diskTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems();
-  }
-
   public List<Image> getImages(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        compute.images().list(projectId).execute().getItems(),
+        compute.listImages(projectId),
         i -> !isDeprecated(i.getDeprecated()),
         Comparator.comparing(Image::getName));
   }
@@ -164,7 +155,7 @@ public class ComputeClient {
   public Image getImage(final String projectId, final String imageName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(imageName));
-    return compute.images().get(projectId, imageName).execute();
+    return compute.getImage(projectId, imageName);
   }
 
   public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zoneLink)
@@ -172,7 +163,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems(),
+        compute.listAcceleratorTypes(projectId, nameFromSelfLink(zoneLink)),
         a -> !isDeprecated(a.getDeprecated()),
         Comparator.comparing(AcceleratorType::getName));
   }
@@ -180,8 +171,7 @@ public class ComputeClient {
   public List<Network> getNetworks(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        compute.networks().list(projectId).execute().getItems(),
-        Comparator.comparing(Network::getName));
+        compute.listNetworks(projectId), Comparator.comparing(Network::getName));
   }
 
   public List<Subnetwork> getSubnetworks(
@@ -191,7 +181,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(networkLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
-        compute.subnetworks().list(projectId, nameFromSelfLink(regionLink)).execute().getItems(),
+        compute.listSubnetworks(projectId, nameFromSelfLink(regionLink)),
         s -> s.getNetwork().equalsIgnoreCase(networkLink),
         Comparator.comparing(Subnetwork::getName));
   }
@@ -201,13 +191,12 @@ public class ComputeClient {
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instance);
-    final Compute.Instances.Insert insert =
-        compute.instances().insert(projectId, instance.getZone(), instance);
+    String zone = nameFromSelfLink(instance.getZone());
     if (templateLink.isPresent()) {
       Preconditions.checkArgument(!templateLink.get().isEmpty());
-      insert.setSourceInstanceTemplate(templateLink.get());
+      return compute.insertInstanceWithTemplate(projectId, zone, instance, templateLink.get());
     }
-    return insert.execute();
+    return compute.insertInstance(projectId, zone, instance);
   }
 
   public Operation terminateInstance(
@@ -215,7 +204,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
-    return compute.instances().delete(projectId, nameFromSelfLink(zoneLink), instanceId).execute();
+    return compute.deleteInstance(projectId, nameFromSelfLink(zoneLink), instanceId);
   }
 
   public Operation terminateInstanceWithStatus(
@@ -229,9 +218,9 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(desiredStatus));
     final String zoneName = nameFromSelfLink(zoneLink);
-    Instance i = getInstance(projectId, zoneName, instanceId);
-    if (i.getStatus().equals(desiredStatus)) {
-      return compute.instances().delete(projectId, zoneName, instanceId).execute();
+    Instance instance = compute.getInstance(projectId, zoneName, instanceId);
+    if (instance.getStatus().equals(desiredStatus)) {
+      return compute.deleteInstance(projectId, zoneName, instanceId);
     }
     return null;
   }
@@ -241,7 +230,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
-    return compute.instances().get(projectId, nameFromSelfLink(zoneLink), instanceId).execute();
+    return compute.getInstance(projectId, nameFromSelfLink(zoneLink), instanceId);
   }
 
   /**
@@ -256,9 +245,8 @@ public class ComputeClient {
       final String projectId, final Map<String, String> labels) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(labels);
-    Compute.Instances.AggregatedList request = compute.instances().aggregatedList(projectId);
-    request.setFilter(buildLabelsFilterString(labels));
-    Map<String, InstancesScopedList> result = request.execute().getItems();
+    Map<String, InstancesScopedList> result =
+        compute.aggregatedListInstances(projectId, buildLabelsFilterString(labels));
     List<Instance> instances = new ArrayList<>();
     for (InstancesScopedList instancesInZone : result.values()) {
       if (instancesInZone.getInstances() != null) {
@@ -272,27 +260,26 @@ public class ComputeClient {
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
-    return compute.instanceTemplates().get(projectId, templateName).execute();
+    return compute.getInstanceTemplate(projectId, templateName);
   }
 
   public void insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instanceTemplate);
-    compute.instanceTemplates().insert(projectId, instanceTemplate).execute();
+    compute.insertInstanceTemplate(projectId, instanceTemplate);
   }
 
   public void deleteTemplate(final String projectId, final String templateName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
-    compute.instanceTemplates().delete(projectId, templateName).execute();
+    compute.deleteInstanceTemplate(projectId, templateName);
   }
 
   public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        compute.instanceTemplates().list(projectId).execute().getItems(),
-        Comparator.comparing(InstanceTemplate::getName));
+        compute.listInstanceTemplates(projectId), Comparator.comparing(InstanceTemplate::getName));
   }
 
   /**
@@ -316,7 +303,7 @@ public class ComputeClient {
     String zoneName = nameFromSelfLink(zoneLink);
     Instance instance;
     try {
-      instance = compute.instances().get(projectId, zoneName, instanceId).execute();
+      instance = compute.getInstance(projectId, zoneName, instanceId);
     } catch (IOException ioe) {
       LOGGER.log(Level.WARNING, "Error retrieving instance.", ioe);
       throw ioe;
@@ -364,8 +351,7 @@ public class ComputeClient {
     Snapshot snapshot = new Snapshot();
     snapshot.setName(diskName);
 
-    Operation op =
-        compute.disks().createSnapshot(projectId, zoneName, diskName, snapshot).execute();
+    Operation op = compute.createDiskSnapshot(projectId, zoneName, diskName, snapshot);
     // poll for result
     waitForOperationCompletion(projectId, op, timeout);
   }
@@ -380,7 +366,7 @@ public class ComputeClient {
   public void deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
-    compute.snapshots().delete(projectId, snapshotName).execute();
+    compute.deleteSnapshot(projectId, snapshotName);
   }
 
   /**
@@ -395,7 +381,7 @@ public class ComputeClient {
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
-    return compute.snapshots().get(projectId, snapshotName).execute();
+    return compute.getSnapshot(projectId, snapshotName);
   }
 
   /**
@@ -412,10 +398,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(operationId));
-    return compute
-        .zoneOperations()
-        .get(projectId, nameFromSelfLink(zoneLink), operationId)
-        .execute();
+    return compute.getZoneOperation(projectId, nameFromSelfLink(zoneLink), operationId);
   }
 
   /**
@@ -449,11 +432,7 @@ public class ComputeClient {
     List<Metadata.Items> newMetadataItems = mergeMetadataItems(items, existingMetadata.getItems());
     existingMetadata.setItems(newMetadataItems);
 
-    Operation op =
-        compute
-            .instances()
-            .setMetadata(projectId, zoneName, instanceId, existingMetadata)
-            .execute();
+    Operation op = compute.setInstanceMetadata(projectId, zoneName, instanceId, existingMetadata);
     return waitForOperationCompletion(projectId, op, timeout);
   }
 
