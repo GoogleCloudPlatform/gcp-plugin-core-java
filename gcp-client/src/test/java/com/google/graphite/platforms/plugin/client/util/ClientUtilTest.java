@@ -16,6 +16,7 @@
 
 package com.google.graphite.platforms.plugin.client.util;
 
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,7 +32,6 @@ import org.junit.Test;
 
 /** Tests {@link ClientUtil}. */
 public class ClientUtilTest {
-
   @Test
   public void testProcessResourceListNullItems() {
     List<String> result = processResourceList(null, String::compareTo);
@@ -80,6 +80,16 @@ public class ClientUtilTest {
   public void testNameFromSelfLinkOnlyName() {
     String zone = "asia-east1-a";
     assertEquals("asia-east1-a", ClientUtil.nameFromSelfLink(zone));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testNameFromSelfLinkNull() {
+    nameFromSelfLink(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testNameFromSelfLinkEmpty() {
+    nameFromSelfLink("");
   }
 
   @Test

@@ -16,6 +16,8 @@
 
 package com.google.graphite.platforms.plugin.client.util;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,7 +27,6 @@ import java.util.stream.Collectors;
 
 /** A library of utility functions for common interactions with the GCP client libraries. */
 public class ClientUtil {
-
   /**
    * Given a list of GCP resources, filters the list using the provided filter and sorts according
    * to the provided comparator.
@@ -35,7 +36,7 @@ public class ClientUtil {
    *     then that object will be kept in the final result.
    * @param comparator Defines a comparison between any two objects in {@param items} used for
    *     sorting the result.
-   * @param <T> The type of the list elements
+   * @param <T> The type of the list elements.
    * @return An {@link ImmutableList} which is empty if {@param items} is null or empty, and
    *     otherwise is {@param items} filtered and sorted as described above.
    */
@@ -67,17 +68,18 @@ public class ClientUtil {
    * Removes the prefix information from the provided self link returning only the name.
    *
    * @param selfLink A GCP resource self link, e.g. for an instance:
-   *     "projects/exampleproject/zones/us-west1-a/instances/example"
+   *     "projects/exampleproject/zones/us-west1-a/instances/example".
    * @return The name of the resource referenced by the self-link, i.e. "example".
    */
   public static String nameFromSelfLink(final String selfLink) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(selfLink));
     return selfLink.substring(selfLink.lastIndexOf("/") + 1);
   }
 
   /**
    * Converts a map of GCP labels into the format required to filter a request with these labels.
    *
-   * @param labels A map of key:value GCP labels
+   * @param labels A map of key:value GCP labels.
    * @return A filter string that is a concatenation of strings of the form "(labels.key eq value) "
    *     using the keys and values from {@param labels}.
    */
