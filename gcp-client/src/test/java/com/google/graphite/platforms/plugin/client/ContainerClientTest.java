@@ -38,44 +38,52 @@ public class ContainerClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithNullProjectId() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(null, TEST_LOCATION, TEST_CLUSTER);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithNullLocation() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(TEST_PROJECT_ID, null, TEST_CLUSTER);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithNullClusterName() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(TEST_PROJECT_ID, TEST_LOCATION, null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithEmptyProjectId() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster("", TEST_LOCATION, TEST_CLUSTER);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithEmptyLocation() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(TEST_PROJECT_ID, "", TEST_CLUSTER);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithEmptyClusterName() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(TEST_PROJECT_ID, TEST_LOCATION, "");
   }
 
   @Test
   public void testGetClusterReturnsProperlyWhenClusterExists() throws IOException {
-    ContainerClient containerClient = setUpGetClient(TEST_CLUSTER, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
     Cluster expected = new Cluster().setName(TEST_CLUSTER);
+    Mockito.when(container.getCluster(anyString(), anyString(), anyString())).thenReturn(expected);
+    ContainerClient containerClient = new ContainerClient(container);
     Cluster response = containerClient.getCluster(TEST_PROJECT_ID, TEST_LOCATION, TEST_CLUSTER);
     assertNotNull(response);
     assertEquals(expected, response);
@@ -83,25 +91,33 @@ public class ContainerClientTest {
 
   @Test(expected = IOException.class)
   public void testGetClusterThrowsErrorWhenClusterDoesntExists() throws IOException {
-    ContainerClient containerClient = setUpGetClient(null, new IOException());
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.getCluster(anyString(), anyString(), anyString()))
+        .thenThrow(IOException.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.getCluster(TEST_PROJECT_ID, TEST_LOCATION, TEST_CLUSTER);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testListAllClustersErrorWithNullProjectId() throws IOException {
-    ContainerClient containerClient = setUpListClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.listAllClusters(null);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testListAllClustersErrorWithEmptyProjectId() throws IOException {
-    ContainerClient containerClient = setUpListClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.listAllClusters("");
   }
 
   @Test
   public void testListAllClustersWithValidInputsWhenClustersExist() throws IOException {
-    ContainerClient containerClient = setUpListClient(ImmutableList.of(TEST_CLUSTER), null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.listClusters(anyString(), anyString()))
+        .thenReturn(initClusterList(ImmutableList.of(TEST_CLUSTER)));
+    ContainerClient containerClient = new ContainerClient(container);
     List<Cluster> expected = initClusterList(ImmutableList.of(TEST_CLUSTER));
     List<Cluster> response = containerClient.listAllClusters(TEST_PROJECT_ID);
     assertNotNull(response);
@@ -110,8 +126,10 @@ public class ContainerClientTest {
 
   @Test
   public void testListAllClustersSortedWithMultipleClusters() throws IOException {
-    ContainerClient containerClient =
-        setUpListClient(ImmutableList.of(TEST_CLUSTER, OTHER_CLUSTER), null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.listClusters(anyString(), anyString()))
+        .thenReturn(initClusterList(ImmutableList.of(TEST_CLUSTER, OTHER_CLUSTER)));
+    ContainerClient containerClient = new ContainerClient(container);
     List<Cluster> expected = initClusterList(ImmutableList.of(OTHER_CLUSTER, TEST_CLUSTER));
     List<Cluster> response = containerClient.listAllClusters(TEST_PROJECT_ID);
     assertNotNull(response);
@@ -120,7 +138,9 @@ public class ContainerClientTest {
 
   @Test
   public void testListAllClustersWithValidInputsWhenClustersIsNull() throws IOException {
-    ContainerClient containerClient = setUpListClient(null, null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.listClusters(anyString(), anyString())).thenReturn(null);
+    ContainerClient containerClient = new ContainerClient(container);
     List<Cluster> expected = ImmutableList.of();
     List<Cluster> response = containerClient.listAllClusters(TEST_PROJECT_ID);
     assertNotNull(response);
@@ -129,7 +149,9 @@ public class ContainerClientTest {
 
   @Test
   public void testListAllClustersEmptyWithValidProjectWithNoClusters() throws IOException {
-    ContainerClient containerClient = setUpListClient(ImmutableList.of(), null);
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.listClusters(anyString(), anyString())).thenReturn(ImmutableList.of());
+    ContainerClient containerClient = new ContainerClient(container);
     List<Cluster> expected = ImmutableList.of();
     List<Cluster> response = containerClient.listAllClusters(TEST_PROJECT_ID);
     assertNotNull(response);
@@ -138,7 +160,9 @@ public class ContainerClientTest {
 
   @Test(expected = IOException.class)
   public void testListAllClustersThrowsErrorWithInvalidProject() throws IOException {
-    ContainerClient containerClient = setUpListClient(null, new IOException());
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.listClusters(anyString(), anyString())).thenThrow(IOException.class);
+    ContainerClient containerClient = new ContainerClient(container);
     containerClient.listAllClusters(TEST_PROJECT_ID);
   }
 
@@ -149,34 +173,5 @@ public class ContainerClientTest {
     List<Cluster> clusters = new ArrayList<>();
     clusterNames.forEach(e -> clusters.add(new Cluster().setName(e).setLocation(TEST_LOCATION)));
     return clusters;
-  }
-
-  private static ContainerClient setUpGetClient(String clusterName, IOException ioException)
-      throws IOException {
-    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
-    ContainerClient client = new ContainerClient(container);
-
-    if (ioException != null) {
-      Mockito.when(container.getCluster(anyString(), anyString(), anyString()))
-          .thenThrow(ioException);
-    } else {
-      Mockito.when(container.getCluster(anyString(), anyString(), anyString()))
-          .thenReturn(new Cluster().setName(clusterName));
-    }
-    return client;
-  }
-
-  private static ContainerClient setUpListClient(List<String> clusters, IOException ioException)
-      throws IOException {
-    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
-    ContainerClient client = new ContainerClient(container);
-
-    if (ioException != null) {
-      Mockito.when(container.listClusters(anyString(), anyString())).thenThrow(ioException);
-    } else {
-      Mockito.when(container.listClusters(anyString(), anyString()))
-          .thenReturn(initClusterList(clusters));
-    }
-    return client;
   }
 }

@@ -40,13 +40,17 @@ public class CloudResourceManagerClientTest {
 
   @Test(expected = IOException.class)
   public void testGetAccountProjectsErrorWithInvalidCredentials() throws IOException {
-    CloudResourceManagerClient client = setUpClient(null, new IOException());
+    CloudResourceManagerWrapper wrapper = Mockito.mock(CloudResourceManagerWrapper.class);
+    Mockito.when(wrapper.listProjects()).thenThrow(IOException.class);
+    CloudResourceManagerClient client = new CloudResourceManagerClient(wrapper);
     client.getAccountProjects();
   }
 
   @Test
   public void testGetAccountProjectsNullReturnsEmpty() throws IOException {
-    CloudResourceManagerClient client = setUpClient(null, null);
+    CloudResourceManagerWrapper wrapper = Mockito.mock(CloudResourceManagerWrapper.class);
+    Mockito.when(wrapper.listProjects()).thenReturn(null);
+    CloudResourceManagerClient client = new CloudResourceManagerClient(wrapper);
     List<Project> projects = client.getAccountProjects();
     assertNotNull(projects);
     assertEquals(ImmutableList.of(), projects);
@@ -54,7 +58,9 @@ public class CloudResourceManagerClientTest {
 
   @Test
   public void testGetAccountProjectsEmptyReturnsEmpty() throws IOException {
-    CloudResourceManagerClient client = setUpClient(ImmutableList.of(), null);
+    CloudResourceManagerWrapper wrapper = Mockito.mock(CloudResourceManagerWrapper.class);
+    Mockito.when(wrapper.listProjects()).thenReturn(ImmutableList.of());
+    CloudResourceManagerClient client = new CloudResourceManagerClient(wrapper);
     List<Project> projects = client.getAccountProjects();
     assertNotNull(projects);
     assertEquals(ImmutableList.of(), projects);
@@ -62,7 +68,9 @@ public class CloudResourceManagerClientTest {
 
   @Test
   public void testGetAccountProjectsSorted() throws IOException {
-    CloudResourceManagerClient client = setUpClient(TEST_PROJECT_IDS_SORTED, null);
+    CloudResourceManagerWrapper wrapper = Mockito.mock(CloudResourceManagerWrapper.class);
+    Mockito.when(wrapper.listProjects()).thenReturn(initProjectList(TEST_PROJECT_IDS_SORTED));
+    CloudResourceManagerClient client = new CloudResourceManagerClient(wrapper);
     List<Project> projects = client.getAccountProjects();
     assertNotNull(projects);
     assertEquals(initProjectList(TEST_PROJECT_IDS_SORTED), projects);
@@ -72,22 +80,12 @@ public class CloudResourceManagerClientTest {
   public void testGetAccountProjectsUnsortedReturnedAsSorted() throws IOException {
     List<Project> expected = initProjectList(TEST_PROJECT_IDS_UNSORTED);
     expected.sort(Comparator.comparing(Project::getProjectId));
-    CloudResourceManagerClient client = setUpClient(TEST_PROJECT_IDS_UNSORTED, null);
+    CloudResourceManagerWrapper wrapper = Mockito.mock(CloudResourceManagerWrapper.class);
+    Mockito.when(wrapper.listProjects()).thenReturn(initProjectList(TEST_PROJECT_IDS_UNSORTED));
+    CloudResourceManagerClient client = new CloudResourceManagerClient(wrapper);
     List<Project> projects = client.getAccountProjects();
     assertNotNull(projects);
     assertEquals(expected, projects);
-  }
-
-  private static CloudResourceManagerClient setUpClient(
-      List<String> initial, IOException ioException) throws IOException {
-    CloudResourceManagerWrapper cloudResourceManager =
-        Mockito.mock(CloudResourceManagerWrapper.class);
-    if (ioException != null) {
-      Mockito.when(cloudResourceManager.listProjects()).thenThrow(ioException);
-    } else {
-      Mockito.when(cloudResourceManager.listProjects()).thenReturn(initProjectList(initial));
-    }
-    return new CloudResourceManagerClient(cloudResourceManager);
   }
 
   private static List<Project> initProjectList(List<String> projectIds) {
