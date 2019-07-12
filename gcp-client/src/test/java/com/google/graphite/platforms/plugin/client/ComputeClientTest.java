@@ -40,7 +40,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 /** Tests {@link ComputeClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ComputeClientTest {
-
   private static final String TEST_PROJECT_ID = "test-project";
   private static final String TEST_TEMPLATE_NAME = "test-template-name";
 

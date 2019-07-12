@@ -46,7 +46,7 @@ public class CloudResourceManagerClient {
   /**
    * Retrieves a list of Projects for the credentials associated with this client.
    *
-   * @return The retrieved list of projects.
+   * @return The retrieved list of projects sorted by project ID.
    * @throws IOException When an error occurred attempting to get the projects.
    */
   public ImmutableList<Project> listProjects() throws IOException {

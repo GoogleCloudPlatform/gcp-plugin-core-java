@@ -526,7 +526,7 @@ public class ComputeClient {
 
     Operation op = compute.createDiskSnapshot(projectId, zoneName, diskName, snapshot);
     // poll for result
-    return waitForOperationCompletion(projectId, op, timeout);
+    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
   }
 
   /**
@@ -607,31 +607,24 @@ public class ComputeClient {
     existingMetadata.setItems(newMetadataItems);
 
     Operation op = compute.setInstanceMetadata(projectId, zoneName, instanceId, existingMetadata);
-    return waitForOperationCompletion(projectId, op, timeout);
-  }
-
-  public Operation.Error waitForOperationCompletion(
-      final String projectId, final Operation operation, final long timeout)
-      throws InterruptedException {
-    Preconditions.checkNotNull(operation);
-    return waitForOperationCompletion(projectId, operation.getZone(), operation.getName(), timeout);
+    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
   }
 
   /**
    * Blocks until an existing {@link Operation} completes.
    *
    * @param projectId The ID of the project for this {@link Operation}.
-   * @param operationId The ID of the {@link Operation}.
+   * @param operationName The name of the {@link Operation}.
    * @param zoneLink The self-link of the zone for the {@link Operation}.
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The {@link Operation.Error} for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
    */
   public Operation.Error waitForOperationCompletion(
-      final String projectId, final String operationId, final String zoneLink, final long timeout)
+      final String projectId, final String operationName, final String zoneLink, final long timeout)
       throws InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(Strings.isNullOrEmpty(operationId));
+    Preconditions.checkArgument(Strings.isNullOrEmpty(operationName));
     Preconditions.checkArgument(Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(timeout > 0);
 
@@ -644,9 +637,9 @@ public class ComputeClient {
           // Awaitility requires a function without arguments, so cannot use helper method here.
           .until(
               () -> {
-                LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete.");
+                LOGGER.log(Level.FINE, "Waiting for operation " + operationName + " to complete.");
                 try {
-                  Operation op = getZoneOperation(projectId, zoneLink, operationId);
+                  Operation op = getZoneOperation(projectId, zoneLink, operationName);
                   // Store the error here.
                   operation.setError(op.getError());
                   return isOperationDone(op);
