@@ -17,20 +17,15 @@
 package com.google.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 
-import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
-import com.google.api.services.compute.model.DiskTypeList;
 import com.google.api.services.compute.model.InstanceTemplate;
-import com.google.api.services.compute.model.InstanceTemplateList;
 import com.google.api.services.compute.model.MachineType;
-import com.google.api.services.compute.model.MachineTypeList;
 import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.compute.model.Region;
-import com.google.api.services.compute.model.RegionList;
 import com.google.api.services.compute.model.Zone;
-import com.google.api.services.compute.model.ZoneList;
 import com.google.graphite.platforms.plugin.client.util.ClientUtil;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,23 +46,7 @@ public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";
   private static final String TEST_TEMPLATE_NAME = "test-template-name";
 
-  @Mock public Compute compute;
-
-  @Mock public Compute.Regions regions;
-
-  @Mock public Compute.Regions.List regionsListCall;
-
-  @Mock public Compute.Zones zones;
-
-  @Mock public Compute.Zones.List zonesListCall;
-
-  @Mock public Compute.MachineTypes machineTypes;
-
-  @Mock Compute.MachineTypes.List machineTypesListCall;
-
-  @Mock public Compute.DiskTypes diskTypes;
-
-  @Mock Compute.DiskTypes.List diskTypesListCall;
+  @Mock public ComputeWrapper compute;
 
   @InjectMocks ComputeClient computeClient;
 
@@ -86,48 +65,21 @@ public class ComputeClientTest {
     listOfInstanceTemplate = new ArrayList<>();
 
     // Mock regions
-    RegionList regionList = new RegionList().setItems(listOfRegions);
-    Mockito.when(regionsListCall.execute()).thenReturn(regionList);
-    Mockito.when(regions.list(TEST_PROJECT_ID)).thenReturn(regionsListCall);
-    Mockito.when(compute.regions()).thenReturn(regions);
+    Mockito.when(compute.listRegions(anyString())).thenReturn(listOfRegions);
 
     // Mock zones
-    ZoneList zoneList = new ZoneList().setItems(listOfZones);
-    Mockito.when(zonesListCall.execute()).thenReturn(zoneList);
-    Mockito.when(zones.list(TEST_PROJECT_ID)).thenReturn(zonesListCall);
-    Mockito.when(compute.zones()).thenReturn(zones);
+    Mockito.when(compute.listZones(anyString())).thenReturn(listOfZones);
 
     // Mock machine types
-    MachineTypeList machineTypeList = new MachineTypeList().setItems(listOfMachineTypes);
-    Mockito.when(machineTypesListCall.execute()).thenReturn(machineTypeList);
-    Mockito.when(machineTypes.list(Mockito.anyString(), Mockito.anyString()))
-        .thenReturn(machineTypesListCall);
-    Mockito.when(compute.machineTypes()).thenReturn(machineTypes);
+    Mockito.when(compute.listMachineTypes(anyString(), anyString())).thenReturn(listOfMachineTypes);
 
     // Mock disk types
-    DiskTypeList diskTypeList = new DiskTypeList().setItems(listOfDiskTypes);
-    Mockito.when(diskTypesListCall.execute()).thenReturn(diskTypeList);
-    Mockito.when(diskTypes.list(Mockito.anyString(), Mockito.anyString()))
-        .thenReturn(diskTypesListCall);
-    Mockito.when(compute.diskTypes()).thenReturn(diskTypes);
+    Mockito.when(compute.listDiskTypes(anyString(), anyString())).thenReturn(listOfDiskTypes);
 
     // Mock instance templates
-    Compute.InstanceTemplates instanceTemplates = Mockito.mock(Compute.InstanceTemplates.class);
-    Compute.InstanceTemplates.List instanceTemplatesList =
-        Mockito.mock(Compute.InstanceTemplates.List.class);
-    Compute.InstanceTemplates.Get instanceTemplatesGet =
-        Mockito.mock(Compute.InstanceTemplates.Get.class);
-    InstanceTemplateList listOfInstanceTemplates =
-        new InstanceTemplateList().setItems(listOfInstanceTemplate);
-
-    Mockito.when(instanceTemplatesGet.execute())
+    Mockito.when(compute.listInstanceTemplates(anyString())).thenReturn(listOfInstanceTemplate);
+    Mockito.when(compute.getInstanceTemplate(anyString(), anyString()))
         .thenReturn(new InstanceTemplate().setName(TEST_TEMPLATE_NAME));
-    Mockito.when(instanceTemplates.get(TEST_PROJECT_ID, TEST_TEMPLATE_NAME))
-        .thenReturn(instanceTemplatesGet);
-
-    Mockito.when(instanceTemplatesList.execute()).thenReturn(listOfInstanceTemplates);
-    Mockito.when(instanceTemplates.list(TEST_PROJECT_ID)).thenReturn(instanceTemplatesList);
-    Mockito.when(compute.instanceTemplates()).thenReturn(instanceTemplates);
   }
 
   @Test

@@ -21,7 +21,6 @@ import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFr
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.diffplug.common.base.Errors;
-import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
@@ -62,8 +61,8 @@ public class ComputeClient {
 
   private final ComputeWrapper compute;
 
-  ComputeClient(final Compute compute) {
-    this.compute = new ComputeWrapper(compute);
+  ComputeClient(final ComputeWrapper compute) {
+    this.compute = compute;
   }
 
   public static List<Metadata.Items> mergeMetadataItems(
@@ -270,7 +269,8 @@ public class ComputeClient {
     return compute.insertInstanceTemplate(projectId, instanceTemplate);
   }
 
-  public Operation deleteTemplate(final String projectId, final String templateName) throws IOException {
+  public Operation deleteTemplate(final String projectId, final String templateName)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
     return compute.deleteInstanceTemplate(projectId, templateName);
@@ -363,7 +363,8 @@ public class ComputeClient {
    * @param snapshotName Name of the snapshot to be deleted.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
-  public Operation deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
+  public Operation deleteSnapshot(final String projectId, final String snapshotName)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
     return compute.deleteSnapshot(projectId, snapshotName);

@@ -49,10 +49,11 @@ public class ClientFactory {
 
   public ComputeClient computeClient() {
     return new ComputeClient(
-        new Compute.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(this::initializeRequest)
-            .setApplicationName(applicationName)
-            .build());
+        new ComputeWrapper(
+            new Compute.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
   }
 
   public CloudResourceManagerClient cloudResourceManagerClient() {
