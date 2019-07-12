@@ -43,10 +43,8 @@ public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";
   private static final String TEST_TEMPLATE_NAME = "test-template-name";
 
-  @Mock public ComputeWrapper compute;
-
-  @InjectMocks ComputeClient computeClient;
-
+  @Mock private ComputeWrapper compute;
+  @InjectMocks private ComputeClient computeClient;
   private List<Region> listOfRegions;
   private List<Zone> listOfZones;
   private List<MachineType> listOfMachineTypes;
