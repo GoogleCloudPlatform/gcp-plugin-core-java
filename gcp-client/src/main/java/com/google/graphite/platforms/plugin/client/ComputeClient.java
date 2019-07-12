@@ -59,7 +59,6 @@ import org.awaitility.core.ConditionTimeoutException;
  */
 public class ComputeClient {
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
-  private static final long SNAPSHOT_TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(10);
 
   private final Compute compute;
 
@@ -256,10 +255,12 @@ public class ComputeClient {
    * @param projectId Google cloud project id (e.g. my-project).
    * @param zone Instance's zone.
    * @param instanceId Name of the instance whose disks to take a snapshot of.
+   * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation or in retrieving the instance.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshot(final String projectId, final String zone, final String instanceId)
+  public void createSnapshot(
+      final String projectId, final String zone, final String instanceId, final long timeout)
       throws IOException, InterruptedException {
     String zoneName = nameFromSelfLink(zone);
     Instance instance;
@@ -279,7 +280,7 @@ public class ComputeClient {
                     disk -> {
                       try {
                         createSnapshotForDisk(
-                            projectId, zoneName, nameFromSelfLink(disk.getSource()));
+                            projectId, zoneName, nameFromSelfLink(disk.getSource()), timeout);
                       } catch (IOException ioe) {
                         LOGGER.log(Level.WARNING, "Error in creating snapshot.", ioe);
                         throw ioe;
@@ -298,18 +299,19 @@ public class ComputeClient {
    * @param projectId Google cloud project id.
    * @param zone Zone of disk.
    * @param diskId Name of disk to create a snapshot for.
+   * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshotForDisk(final String projectId, final String zone, final String diskId)
+  public void createSnapshotForDisk(
+      final String projectId, final String zone, final String diskId, final long timeout)
       throws IOException, InterruptedException {
     Snapshot snapshot = new Snapshot();
     snapshot.setName(diskId);
 
     Operation op = compute.disks().createSnapshot(projectId, zone, diskId, snapshot).execute();
     // poll for result
-    waitForOperationCompletion(
-        projectId, op.getName(), op.getZone(), SNAPSHOT_TIMEOUT_MILLISECONDS);
+    waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
   }
 
   /**
@@ -368,18 +370,20 @@ public class ComputeClient {
    * Appends metadata to an instance. Any metadata items with existing keys will be overwritten.
    * Otherwise, metadata is preserved. This method blocks until the operation completes.
    *
-   * @param projectId
-   * @param zone
-   * @param instanceId
-   * @param items
-   * @throws IOException
-   * @throws InterruptedException
+   * @param projectId The ID of the project for the instance.
+   * @param zone The self link of the zone for the instance.
+   * @param instanceId The ID of the instance.
+   * @param items The new metadata items to append to existing metadata.
+   * @param timeout The number of milliseconds to wait for the operation to timeout.
+   * @throws IOException If there was an error retrieving the instance.
+   * @throws InterruptedException If the operation to set metadata timed out.
    */
   public Operation.Error appendInstanceMetadata(
       final String projectId,
       final String zone,
       final String instanceId,
-      final List<Metadata.Items> items)
+      final List<Metadata.Items> items,
+      final long timeout)
       throws IOException, InterruptedException {
     String zoneName = nameFromSelfLink(zone);
     Instance instance = getInstance(projectId, zoneName, instanceId);
@@ -393,7 +397,7 @@ public class ComputeClient {
             .instances()
             .setMetadata(projectId, zoneName, instanceId, existingMetadata)
             .execute();
-    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), 60 * 1000);
+    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
   }
 
   /**
