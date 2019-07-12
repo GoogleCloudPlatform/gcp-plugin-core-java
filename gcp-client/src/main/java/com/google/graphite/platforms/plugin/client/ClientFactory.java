@@ -25,6 +25,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.container.Container;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
@@ -42,8 +43,8 @@ public class ClientFactory {
       throws IOException, GeneralSecurityException {
     this.transport = httpTransport.orElse(GoogleNetHttpTransport.newTrustedTransport());
     this.jsonFactory = new JacksonFactory();
-    this.httpRequestInitializer = httpRequestInitializer;
-    this.applicationName = applicationName;
+    this.httpRequestInitializer = Preconditions.checkNotNull(httpRequestInitializer);
+    this.applicationName = Preconditions.checkNotNull(applicationName);
   }
 
   public ComputeClient computeClient() {

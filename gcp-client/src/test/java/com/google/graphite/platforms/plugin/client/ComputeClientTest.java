@@ -171,8 +171,8 @@ public class ComputeClientTest {
             .setName("d")
             .setDeprecated(new DeprecationStatus().setState("DEPRECATED")));
 
-    assertEquals(3, computeClient.getMachineTypes("", "test").size());
-    assertEquals("a", computeClient.getMachineTypes("", "test").get(0).getName());
+    assertEquals(3, computeClient.getMachineTypes(TEST_PROJECT_ID, "test").size());
+    assertEquals("a", computeClient.getMachineTypes(TEST_PROJECT_ID, "test").get(0).getName());
   }
 
   @Test
@@ -185,8 +185,8 @@ public class ComputeClientTest {
     listOfDiskTypes.add(
         new DiskType().setName("d").setDeprecated(new DeprecationStatus().setState("DEPRECATED")));
 
-    assertEquals(3, computeClient.getBootDiskTypes("", "test").size());
-    assertEquals("a", computeClient.getBootDiskTypes("", "test").get(0).getName());
+    assertEquals(3, computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").size());
+    assertEquals("a", computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").get(0).getName());
   }
 
   @Test

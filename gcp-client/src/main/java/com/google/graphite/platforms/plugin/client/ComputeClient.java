@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,6 +89,7 @@ public class ComputeClient {
    * @throws IOException
    */
   public List<Region> getRegions(final String projectId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.regions().list(projectId).execute().getItems(),
         r -> !isDeprecated(r.getDeprecated()),
@@ -95,6 +97,8 @@ public class ComputeClient {
   }
 
   public List<Zone> getZones(final String projectId, final String region) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(region));
     return processResourceList(
         compute.zones().list(projectId).execute().getItems(),
         z -> region.equalsIgnoreCase(z.getRegion()),
@@ -103,6 +107,8 @@ public class ComputeClient {
 
   public List<MachineType> getMachineTypes(final String projectId, final String zone)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
     return processResourceList(
         compute.machineTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
         o -> !isDeprecated(o.getDeprecated()),
@@ -110,6 +116,8 @@ public class ComputeClient {
   }
 
   public List<String> cpuPlatforms(final String projectId, final String zone) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
     Zone zoneObject = compute.zones().get(projectId, zone).execute();
     if (zoneObject == null) {
       return ImmutableList.of();
@@ -118,6 +126,8 @@ public class ComputeClient {
   }
 
   public List<DiskType> getDiskTypes(final String projectId, final String zone) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
     return processResourceList(
         getDiskTypeList(projectId, zone),
         d -> !isDeprecated(d.getDeprecated()),
@@ -126,6 +136,8 @@ public class ComputeClient {
 
   public List<DiskType> getBootDiskTypes(final String projectId, final String zone)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
     return processResourceList(
         this.getDiskTypeList(projectId, zone),
         // No local disks
@@ -139,6 +151,7 @@ public class ComputeClient {
   }
 
   public List<Image> getImages(final String projectId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.images().list(projectId).execute().getItems(),
         i -> !isDeprecated(i.getDeprecated()),
@@ -146,11 +159,15 @@ public class ComputeClient {
   }
 
   public Image getImage(final String projectId, final String name) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
     return compute.images().get(projectId, name).execute();
   }
 
   public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zone)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
     return processResourceList(
         compute.acceleratorTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
         a -> !isDeprecated(a.getDeprecated()),
@@ -158,6 +175,7 @@ public class ComputeClient {
   }
 
   public List<Network> getNetworks(final String projectId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.networks().list(projectId).execute().getItems(),
         Comparator.comparing(Network::getName));
@@ -166,6 +184,9 @@ public class ComputeClient {
   public List<Subnetwork> getSubnetworks(
       final String projectId, final String networkSelfLink, final String region)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(networkSelfLink));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(region));
     return processResourceList(
         compute.subnetworks().list(projectId, nameFromSelfLink(region)).execute().getItems(),
         s -> s.getNetwork().equalsIgnoreCase(networkSelfLink),
@@ -173,18 +194,25 @@ public class ComputeClient {
   }
 
   public Operation insertInstance(
-      final String projectId, final String template, final Instance instance) throws IOException {
+      final String projectId, final Optional<String> template, final Instance instance)
+      throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkNotNull(instance);
     final Compute.Instances.Insert insert =
         compute.instances().insert(projectId, instance.getZone(), instance);
-    if (!Strings.isNullOrEmpty(template)) {
-      insert.setSourceInstanceTemplate(template);
+    if (template.isPresent()) {
+      Preconditions.checkArgument(!template.get().isEmpty());
+      insert.setSourceInstanceTemplate(template.get());
     }
     return insert.execute();
   }
 
   public Operation terminateInstance(
-      final String projectId, final String zone, final String InstanceId) throws IOException {
-    return compute.instances().delete(projectId, nameFromSelfLink(zone), InstanceId).execute();
+      final String projectId, final String zone, final String instanceId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    return compute.instances().delete(projectId, nameFromSelfLink(zone), instanceId).execute();
   }
 
   public Operation terminateInstanceWithStatus(
@@ -193,6 +221,10 @@ public class ComputeClient {
       final String instanceId,
       final String desiredStatus)
       throws IOException, InterruptedException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(desiredStatus));
     final String zoneName = nameFromSelfLink(zone);
     Instance i = getInstance(projectId, zoneName, instanceId);
     if (i.getStatus().equals(desiredStatus)) {
@@ -203,6 +235,9 @@ public class ComputeClient {
 
   public Instance getInstance(final String projectId, final String zone, final String instanceId)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     return compute.instances().get(projectId, nameFromSelfLink(zone), instanceId).execute();
   }
 
@@ -216,6 +251,8 @@ public class ComputeClient {
    */
   public List<Instance> getInstancesWithLabel(
       final String projectId, final Map<String, String> labels) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkNotNull(labels);
     Compute.Instances.AggregatedList request = compute.instances().aggregatedList(projectId);
     request.setFilter(buildLabelsFilterString(labels));
     Map<String, InstancesScopedList> result = request.execute().getItems();
@@ -230,19 +267,26 @@ public class ComputeClient {
 
   public InstanceTemplate getTemplate(final String projectId, final String templateName)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
     return compute.instanceTemplates().get(projectId, templateName).execute();
   }
 
   public void insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkNotNull(instanceTemplate);
     compute.instanceTemplates().insert(projectId, instanceTemplate).execute();
   }
 
   public void deleteTemplate(final String projectId, final String templateName) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
     compute.instanceTemplates().delete(projectId, templateName).execute();
   }
 
   public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.instanceTemplates().list(projectId).execute().getItems(),
         Comparator.comparing(InstanceTemplate::getName));
@@ -262,6 +306,10 @@ public class ComputeClient {
   public void createSnapshot(
       final String projectId, final String zone, final String instanceId, final long timeout)
       throws IOException, InterruptedException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    Preconditions.checkArgument(timeout > 0);
     String zoneName = nameFromSelfLink(zone);
     Instance instance;
     try {
@@ -306,12 +354,16 @@ public class ComputeClient {
   public void createSnapshotForDisk(
       final String projectId, final String zone, final String diskId, final long timeout)
       throws IOException, InterruptedException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(diskId));
+    Preconditions.checkArgument(timeout > 0);
     Snapshot snapshot = new Snapshot();
     snapshot.setName(diskId);
 
     Operation op = compute.disks().createSnapshot(projectId, zone, diskId, snapshot).execute();
     // poll for result
-    waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
+    waitForOperationCompletion(projectId, op, timeout);
   }
 
   /**
@@ -322,6 +374,8 @@ public class ComputeClient {
    * @throws IOException If an error occurred in deleting the snapshot.
    */
   public void deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
     compute.snapshots().delete(projectId, snapshotName).execute();
   }
 
@@ -335,6 +389,8 @@ public class ComputeClient {
    */
   public Snapshot getSnapshot(final String projectId, final String snapshotName)
       throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
     SnapshotList response;
     Compute.Snapshots.List request = compute.snapshots().list(projectId);
 
@@ -363,6 +419,9 @@ public class ComputeClient {
    */
   public Operation getZoneOperation(
       final String projectId, final String zone, final String operationId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(operationId));
     return compute.zoneOperations().get(projectId, nameFromSelfLink(zone), operationId).execute();
   }
 
@@ -385,6 +444,11 @@ public class ComputeClient {
       final List<Metadata.Items> items,
       final long timeout)
       throws IOException, InterruptedException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    Preconditions.checkNotNull(items);
+    Preconditions.checkArgument(timeout > 0);
     String zoneName = nameFromSelfLink(zone);
     Instance instance = getInstance(projectId, zoneName, instanceId);
     Metadata existingMetadata = instance.getMetadata();
@@ -397,7 +461,14 @@ public class ComputeClient {
             .instances()
             .setMetadata(projectId, zoneName, instanceId, existingMetadata)
             .execute();
-    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
+    return waitForOperationCompletion(projectId, op, timeout);
+  }
+
+  public Operation.Error waitForOperationCompletion(
+      final String projectId, final Operation operation, final long timeout)
+      throws InterruptedException {
+    Preconditions.checkNotNull(operation);
+    return waitForOperationCompletion(projectId, operation.getZone(), operation.getName(), timeout);
   }
 
   /**
@@ -413,8 +484,10 @@ public class ComputeClient {
   public Operation.Error waitForOperationCompletion(
       final String projectId, final String operationId, final String zone, final long timeout)
       throws InterruptedException {
-    Preconditions.checkArgument(Strings.isNullOrEmpty(operationId), "Operation ID can not be null");
-    Preconditions.checkArgument(Strings.isNullOrEmpty(zone), "Zone can not be null");
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(Strings.isNullOrEmpty(operationId));
+    Preconditions.checkArgument(Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(timeout > 0);
 
     // Used to hold the Operation.Error which comes from polling the Operation in lambda expression.
     Operation operation = new Operation();
