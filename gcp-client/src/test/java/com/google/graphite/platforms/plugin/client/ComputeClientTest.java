@@ -37,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests {@link ComputeClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ComputeClientTest {
 

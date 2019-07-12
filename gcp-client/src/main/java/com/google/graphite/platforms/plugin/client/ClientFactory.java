@@ -30,12 +30,27 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
 
+/**
+ * A factory for generating clients which provide convenience methods for the GCP client libraries.
+ */
 public class ClientFactory {
   private final HttpTransport transport;
   private final JsonFactory jsonFactory;
   private final HttpRequestInitializer httpRequestInitializer;
   private final String applicationName;
 
+  /**
+   * Constructor for {@link ClientFactory}.
+   *
+   * @param httpTransport An optional HTTP Transport for making HTTP requests. If not specified, the
+   *     default trusted NetHttpTransport will be generated.
+   * @param httpRequestInitializer Used to initialize HTTP requests, and must contain the Credential
+   *     for authenticating requests.
+   * @param applicationName The name of the application which is using the clients in order to tie
+   *     this information to requests to track usage.
+   * @throws IOException If generating a new trusted HTTP Transport failed
+   * @throws GeneralSecurityException If generating a new trusted HTTP Transport failed due to
+   */
   public ClientFactory(
       final Optional<HttpTransport> httpTransport,
       final HttpRequestInitializer httpRequestInitializer,
@@ -47,6 +62,11 @@ public class ClientFactory {
     this.applicationName = Preconditions.checkNotNull(applicationName);
   }
 
+  /**
+   * Initializes a {@link ComputeClient} with the properties of this {@link ClientFactory}.
+   *
+   * @return A {@link ComputeClient} for interacting with the Google Compute Engine API.
+   */
   public ComputeClient computeClient() {
     return new ComputeClient(
         new ComputeWrapper(
@@ -56,6 +76,13 @@ public class ClientFactory {
                 .build()));
   }
 
+  /**
+   * Initializes a {@link CloudResourceManagerClient} with the properties of this {@link
+   * ClientFactory}.
+   *
+   * @return A {@link CloudResourceManagerClient} for interacting with the Cloud Resource Manger
+   *     API.
+   */
   public CloudResourceManagerClient cloudResourceManagerClient() {
     return new CloudResourceManagerClient(
         new CloudResourceManagerWrapper(
@@ -65,6 +92,11 @@ public class ClientFactory {
                 .build()));
   }
 
+  /**
+   * Initializes a {@link ContainerClient} with the properties of this {@link ClientFactory}.
+   *
+   * @return A {@link ContainerClient} for interacting with the Google Kubernetes Engine API.
+   */
   public ContainerClient containerClient() {
     return new ContainerClient(
         new ContainerWrapper(

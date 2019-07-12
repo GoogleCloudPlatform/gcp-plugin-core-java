@@ -54,7 +54,7 @@ import org.awaitility.core.ConditionTimeoutException;
 /**
  * Client for communicating with the Google Compute API
  *
- * @see <a href="https://cloud.google.com/compute/">Cloud Engine</a>
+ * @see <a href="https://cloud.google.com/compute/">Compute Engine</a>
  */
 public class ComputeClient {
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
@@ -65,6 +65,15 @@ public class ComputeClient {
     this.compute = compute;
   }
 
+  /**
+   * Helper method for merging lists of {@link Metadata.Items}.
+   *
+   * @param winner The list of items that will be returned in the final result.
+   * @param loser The list of items that will be returned in the final result, unless an item has
+   *     the same key as an item in {@param winner}, in which case the item from winner will be
+   *     used.
+   * @return The combined list of items from the input lists.
+   */
   public static List<Metadata.Items> mergeMetadataItems(
       final List<Metadata.Items> winner, final List<Metadata.Items> loser) {
     if (loser == null) {
@@ -83,8 +92,11 @@ public class ComputeClient {
   }
 
   /**
-   * @return
-   * @throws IOException
+   * Retrieves the list of {@link Region}s available to the provided project.
+   *
+   * @param projectId The ID of the project to check.
+   * @return A sorted list of available {@link Region}s. Deprecated items are excluded.
+   * @throws IOException An error occurred attempting to get the list of regions.
    */
   public List<Region> getRegions(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -94,6 +106,14 @@ public class ComputeClient {
         Comparator.comparing(Region::getName));
   }
 
+  /**
+   * Retrieves the list of zones available to the project in the given region.
+   *
+   * @param projectId The ID of the project to check.
+   * @param regionLink The self link of the region to check.
+   * @return A list of available {@link Zone}s sorted by name.
+   * @throws IOException An error occurred attempting to get the list of zones.
+   */
   public List<Zone> getZones(final String projectId, final String regionLink) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
@@ -103,6 +123,14 @@ public class ComputeClient {
         Comparator.comparing(Zone::getName));
   }
 
+  /**
+   * Retrieves the list of {@link MachineType}s available for the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @return A list of available {@link MachineType}s sorted by name. Deprecated items are excluded.
+   * @throws IOException An error occurred attempting to get the list of machine types.
+   */
   public List<MachineType> getMachineTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -113,6 +141,14 @@ public class ComputeClient {
         Comparator.comparing(MachineType::getName));
   }
 
+  /**
+   * Retrieves the list of CPU Platforms available for the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @return A sorted list of strings with the available CPU platforms.
+   * @throws IOException An error occurred attempting to get the list of CPU platforms.
+   */
   public List<String> getCpuPlatforms(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -122,6 +158,14 @@ public class ComputeClient {
         String::compareTo);
   }
 
+  /**
+   * Retrieves the list of {@link DiskType}s available for the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @return A sorted list of available {@link DiskType}s. Deprecated disks are excluded.
+   * @throws IOException An error occurred attempting to get the list of disk types.
+   */
   public List<DiskType> getDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -132,6 +176,15 @@ public class ComputeClient {
         Comparator.comparing(DiskType::getName));
   }
 
+  /**
+   * Retrieves the list of Boot {@link DiskType}s available for the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @return A list of available {@link DiskType}s sorted by name. Deprecated and local disks are
+   *     excluded.
+   * @throws IOException An error occurred attempting to get the list of disk types.
+   */
   public List<DiskType> getBootDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -143,6 +196,13 @@ public class ComputeClient {
         Comparator.comparing(DiskType::getName));
   }
 
+  /**
+   * Retrieves the list of {@link Image}s available for the given project.
+   *
+   * @param projectId The ID of the project to check.
+   * @return A list of available {@link Image}s. Deprecated items are excluded.
+   * @throws IOException An error occurred attempting to get the list of images.
+   */
   public List<Image> getImages(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
@@ -151,12 +211,29 @@ public class ComputeClient {
         Comparator.comparing(Image::getName));
   }
 
+  /**
+   * Retrieves the {@link Image} with the given name in the given project.
+   *
+   * @param projectId The ID of the project to check.
+   * @param imageName The name of the image to retrieve.
+   * @return The {@link Image} to retrieve.
+   * @throws IOException An error occurred attempting to get the image.
+   */
   public Image getImage(final String projectId, final String imageName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(imageName));
     return compute.getImage(projectId, imageName);
   }
 
+  /**
+   * Retrieves the list of {@link AcceleratorType}s available for the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @return A list of available {@link AcceleratorType}s sorted by name. Deprecated items are
+   *     excluded.
+   * @throws IOException An error occurred attempting to get the list of accelerator types.
+   */
   public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -167,12 +244,28 @@ public class ComputeClient {
         Comparator.comparing(AcceleratorType::getName));
   }
 
+  /**
+   * Retrieves the list of {@link Network}s available for the given project.
+   *
+   * @param projectId The ID of the project to check.
+   * @return A list of available {@link Network}s sorted by name.
+   * @throws IOException An error occurred attempting to get the list of networks.
+   */
   public List<Network> getNetworks(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
         compute.listNetworks(projectId), Comparator.comparing(Network::getName));
   }
 
+  /**
+   * Retrieves the list of {@link Subnetwork}s of the network in the given project and region.
+   *
+   * @param projectId The ID of the project to check.
+   * @param networkLink The self link of the network to check.
+   * @param regionLink The self link of the region to check.
+   * @return A list of available {@link Subnetwork}s sorted by name.
+   * @throws IOException An error occurred attempting to get the list of machine types.
+   */
   public List<Subnetwork> getSubnetworks(
       final String projectId, final String networkLink, final String regionLink)
       throws IOException {
@@ -185,6 +278,16 @@ public class ComputeClient {
         Comparator.comparing(Subnetwork::getName));
   }
 
+  /**
+   * Inserts the provided instance into the given project.
+   *
+   * @param projectId The ID of the project where the instance will reside.
+   * @param templateLink A self link to an instance template that may be optionally specified to use
+   *     the configuration for that template when creating the instance.
+   * @param instance An {@link Instance} to insert. The instance should specify a zone at minimum.
+   * @return The insert {@link Operation} for tracking the status of inserting the instance.
+   * @throws IOException There was an error attempting to insert the instance.
+   */
   public Operation insertInstance(
       final String projectId, final Optional<String> templateLink, final Instance instance)
       throws IOException {
@@ -198,6 +301,15 @@ public class ComputeClient {
     return compute.insertInstance(projectId, zone, instance);
   }
 
+  /**
+   * Deletes the {@link Instance} specified with the given ID in the project and zone.
+   *
+   * @param projectId The ID of the project where the instance resides.
+   * @param zoneLink The self link of the zone where the instance resides.
+   * @param instanceId The ID of the instance to delete.
+   * @return The deletion {@link Operation} for tracking the status of deleting the instance.
+   * @throws IOException There was an error attempting to delete the instance.
+   */
   public Operation terminateInstance(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -206,12 +318,25 @@ public class ComputeClient {
     return compute.deleteInstance(projectId, nameFromSelfLink(zoneLink), instanceId);
   }
 
-  public Operation terminateInstanceWithStatus(
+  /**
+   * Deletes the {@link Instance} specified with the given ID in the project and zone if it has the
+   * provided status.
+   *
+   * @param projectId The ID of the project where the instance resides.
+   * @param zoneLink The self link of the zone where the instance resides.
+   * @param instanceId The ID of the instance to delete.
+   * @param desiredStatus The status that the instance must have to be deleted.
+   * @return The deletion {@link Operation} for tracking the status of deleting the instance, or
+   *     empty if the instance did not have the desired status.
+   * @throws IOException There was an error attempting to get the instance status or delete the
+   *     instance.
+   */
+  public Optional<Operation> terminateInstanceWithStatus(
       final String projectId,
       final String zoneLink,
       final String instanceId,
       final String desiredStatus)
-      throws IOException, InterruptedException {
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
@@ -219,11 +344,20 @@ public class ComputeClient {
     final String zoneName = nameFromSelfLink(zoneLink);
     Instance instance = compute.getInstance(projectId, zoneName, instanceId);
     if (instance.getStatus().equals(desiredStatus)) {
-      return compute.deleteInstance(projectId, zoneName, instanceId);
+      return Optional.of(compute.deleteInstance(projectId, zoneName, instanceId));
     }
-    return null;
+    return Optional.empty();
   }
 
+  /**
+   * Retrieves the {@link Instance} with the given ID in the given project and zone.
+   *
+   * @param projectId The ID of the project to check.
+   * @param zoneLink The self link of the zone to check.
+   * @param instanceId The ID of the instance to retrieve.
+   * @return The specified {@link Instance}.
+   * @throws IOException An error occurred attempting to get the instance.
+   */
   public Instance getInstance(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -233,12 +367,12 @@ public class ComputeClient {
   }
 
   /**
-   * Return all instances that contain the given labels
+   * Retrieves the list of {@link Instance}s with the provided labels in the project.
    *
-   * @param projectId
-   * @param labels
-   * @return
-   * @throws IOException
+   * @param projectId The ID of the project to check.
+   * @param labels A map of labels.
+   * @return A list of {@link Instance}s.
+   * @throws IOException An error occurred attempting to get the list of machine types.
    */
   public List<Instance> getInstancesWithLabel(
       final String projectId, final Map<String, String> labels) throws IOException {
@@ -255,6 +389,14 @@ public class ComputeClient {
     return instances;
   }
 
+  /**
+   * Retrieves the {@link InstanceTemplate} with the given name in the project.
+   *
+   * @param projectId The ID of the project to check.
+   * @param templateName The name of the template to retrieve.
+   * @return The specified {@link InstanceTemplate}.
+   * @throws IOException An error occurred attempting to get the instance template.
+   */
   public InstanceTemplate getTemplate(final String projectId, final String templateName)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -262,6 +404,15 @@ public class ComputeClient {
     return compute.getInstanceTemplate(projectId, templateName);
   }
 
+  /**
+   * Inserts the provided instance into the given project.
+   *
+   * @param projectId The ID of the project where the instance template will reside.
+   * @param instanceTemplate An {@link InstanceTemplate} to insert.
+   * @return The insert {@link Operation} for tracking the status of inserting the instance
+   *     template.
+   * @throws IOException There was an error attempting to insert the instance template.
+   */
   public Operation insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -269,6 +420,15 @@ public class ComputeClient {
     return compute.insertInstanceTemplate(projectId, instanceTemplate);
   }
 
+  /**
+   * Deletes the {@link InstanceTemplate} with the given name in the given project.
+   *
+   * @param projectId The ID of the project where the instance template resides.
+   * @param templateName The name of the instance template to delete.
+   * @return The deletion {@link Operation} for tracking the status of deleting the instance
+   *     template.
+   * @throws IOException There was an error attempting to delete the instance template.
+   */
   public Operation deleteTemplate(final String projectId, final String templateName)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -276,6 +436,13 @@ public class ComputeClient {
     return compute.deleteInstanceTemplate(projectId, templateName);
   }
 
+  /**
+   * Retrieves the list of {@link InstanceTemplate}s available for the given project.
+   *
+   * @param projectId The ID of the project to check.
+   * @return A list of available {@link InstanceTemplate}s sorted by name.
+   * @throws IOException An error occurred attempting to get the list of instance templates.
+   */
   public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(

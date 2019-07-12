@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
-/** Test suite for {@link ClientUtil}. */
+/** Tests {@link ClientUtil}. */
 public class ClientUtilTest {
 
   @Test

@@ -31,6 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+/** Tests {@link CloudResourceManagerClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class CloudResourceManagerClientTest {
   private static final List<String> TEST_PROJECT_IDS_SORTED =

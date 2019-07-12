@@ -66,7 +66,7 @@ public class ContainerClient {
    *
    * @param projectId The ID of the project the clusters reside in.
    * @return The retrieved list of {@link Cluster} objects.
-   * @throws IOException When an error occurred attempting to get the cluster.
+   * @throws IOException When an error occurred attempting to get the list of clusters.
    */
   public List<Cluster> listAllClusters(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
