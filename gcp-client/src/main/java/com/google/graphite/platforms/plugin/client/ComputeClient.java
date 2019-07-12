@@ -67,22 +67,18 @@ public class ComputeClient {
   public static List<Metadata.Items> mergeMetadataItems(
       final List<Metadata.Items> winner, final List<Metadata.Items> loser) {
     if (loser == null) {
-      return winner;
+      return ImmutableList.copyOf(winner);
     }
 
-    // Remove any existing metadata that has the same key(s) as what we're trying to update/append
-    for (Metadata.Items existing : loser) {
-      boolean duplicate = false;
-      for (Metadata.Items newItem : winner) { // Items to append
-        if (existing.getKey().equals(newItem.getKey())) {
-          duplicate = true;
-        }
-      }
-      if (!duplicate) {
-        winner.add(existing);
-      }
-    }
-    return winner;
+    List<Metadata.Items> result = new ArrayList<>(winner);
+    // Only add items from the existing list to the result if there are no duplicates by key
+    loser
+        .stream()
+        .filter(
+            existing ->
+                winner.stream().noneMatch(newItem -> newItem.getKey().equals(existing.getKey())))
+        .forEach(result::add);
+    return ImmutableList.copyOf(result);
   }
 
   /**
