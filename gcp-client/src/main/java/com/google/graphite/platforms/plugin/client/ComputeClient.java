@@ -263,17 +263,17 @@ public class ComputeClient {
     return compute.getInstanceTemplate(projectId, templateName);
   }
 
-  public void insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
+  public Operation insertTemplate(final String projectId, InstanceTemplate instanceTemplate)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instanceTemplate);
-    compute.insertInstanceTemplate(projectId, instanceTemplate);
+    return compute.insertInstanceTemplate(projectId, instanceTemplate);
   }
 
-  public void deleteTemplate(final String projectId, final String templateName) throws IOException {
+  public Operation deleteTemplate(final String projectId, final String templateName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(templateName));
-    compute.deleteInstanceTemplate(projectId, templateName);
+    return compute.deleteInstanceTemplate(projectId, templateName);
   }
 
   public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
@@ -341,7 +341,7 @@ public class ComputeClient {
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
-  public void createSnapshotForDisk(
+  public Operation.Error createSnapshotForDisk(
       final String projectId, final String zoneName, final String diskName, final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
@@ -353,7 +353,7 @@ public class ComputeClient {
 
     Operation op = compute.createDiskSnapshot(projectId, zoneName, diskName, snapshot);
     // poll for result
-    waitForOperationCompletion(projectId, op, timeout);
+    return waitForOperationCompletion(projectId, op, timeout);
   }
 
   /**
@@ -363,10 +363,10 @@ public class ComputeClient {
    * @param snapshotName Name of the snapshot to be deleted.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
-  public void deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
+  public Operation deleteSnapshot(final String projectId, final String snapshotName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
-    compute.deleteSnapshot(projectId, snapshotName);
+    return compute.deleteSnapshot(projectId, snapshotName);
   }
 
   /**
