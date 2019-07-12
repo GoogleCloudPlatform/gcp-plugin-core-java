@@ -58,6 +58,7 @@ import org.awaitility.core.ConditionTimeoutException;
  */
 public class ComputeClient {
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
+  private static final long POLLING_INTERVAL = 5 * 1000;
 
   private final ComputeWrapper compute;
 
@@ -638,7 +639,7 @@ public class ComputeClient {
     Operation operation = new Operation();
     try {
       Awaitility.await()
-          .pollInterval(5 * 1000, TimeUnit.MILLISECONDS)
+          .pollInterval(POLLING_INTERVAL, TimeUnit.MILLISECONDS)
           .timeout(timeout, TimeUnit.MILLISECONDS)
           // Awaitility requires a function without arguments, so cannot use helper method here.
           .until(
