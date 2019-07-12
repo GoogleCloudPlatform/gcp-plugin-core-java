@@ -29,10 +29,10 @@ import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 public class ClientFactory {
-  private HttpTransport transport;
-  private JsonFactory jsonFactory;
-  private HttpRequestInitializer httpRequestInitializer;
-  private String applicationName;
+  private final HttpTransport transport;
+  private final JsonFactory jsonFactory;
+  private final HttpRequestInitializer httpRequestInitializer;
+  private final String applicationName;
 
   public ClientFactory(
       Optional<HttpTransport> httpTransport,

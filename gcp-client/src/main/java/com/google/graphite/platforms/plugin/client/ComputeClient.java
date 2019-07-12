@@ -51,13 +51,13 @@ import java.util.logging.Logger;
  * @see <a href="https://cloud.google.com/compute/">Cloud Engine</a>
  */
 public class ComputeClient {
-  private Compute compute;
-
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
   private static final long SNAPSHOT_TIMEOUT_MILLISECONDS = TimeUnit.MINUTES.toMillis(10);
 
+  private final Compute compute;
+
   public ComputeClient(Compute compute) {
-    setCompute(compute);
+    this.compute = compute;
   }
 
   public static String nameFromSelfLink(String selfLink) {
@@ -91,10 +91,6 @@ public class ComputeClient {
       }
     }
     return winner;
-  }
-
-  public void setCompute(Compute compute) {
-    this.compute = compute;
   }
 
   /**
