@@ -18,7 +18,7 @@ import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
+import com.google.graphite.platforms.plugin.client.util.ClientUtil;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -81,11 +81,7 @@ public class ContainerClient {
             .list(toApiParent(projectId))
             .execute()
             .getClusters();
-    if (clusters == null) {
-      return ImmutableList.of();
-    }
-    clusters.sort(Comparator.comparing(Cluster::getName));
-    return ImmutableList.copyOf(clusters);
+    return ClientUtil.processResourceList(clusters, Comparator.comparing(Cluster::getName));
   }
 
   private static String toApiName(String projectId, String location, String clusterName) {

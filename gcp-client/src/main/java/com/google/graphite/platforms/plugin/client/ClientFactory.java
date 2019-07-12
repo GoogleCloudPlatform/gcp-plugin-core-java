@@ -17,6 +17,7 @@
 package com.google.graphite.platforms.plugin.client;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -48,10 +49,7 @@ public class ClientFactory {
   public ComputeClient computeClient() {
     return new ComputeClient(
         new Compute.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(
-                request ->
-                    request.setRequestHeaders(
-                        request.getRequestHeaders().setUserAgent(applicationName)))
+            .setGoogleClientRequestInitializer(this::initializeRequest)
             .setApplicationName(applicationName)
             .build());
   }
@@ -59,10 +57,7 @@ public class ClientFactory {
   public CloudResourceManagerClient cloudResourceManagerClient() {
     return new CloudResourceManagerClient(
         new CloudResourceManager.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(
-                request ->
-                    request.setRequestHeaders(
-                        request.getRequestHeaders().setUserAgent(applicationName)))
+            .setGoogleClientRequestInitializer(this::initializeRequest)
             .setApplicationName(applicationName)
             .build());
   }
@@ -70,11 +65,12 @@ public class ClientFactory {
   public ContainerClient containerClient() {
     return new ContainerClient(
         new Container.Builder(transport, jsonFactory, httpRequestInitializer)
-            .setGoogleClientRequestInitializer(
-                request ->
-                    request.setRequestHeaders(
-                        request.getRequestHeaders().setUserAgent(applicationName)))
+            .setGoogleClientRequestInitializer(this::initializeRequest)
             .setApplicationName(applicationName)
             .build());
+  }
+
+  private void initializeRequest(AbstractGoogleClientRequest request) {
+    request.setRequestHeaders(request.getRequestHeaders().setUserAgent(applicationName));
   }
 }

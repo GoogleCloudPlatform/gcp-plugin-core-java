@@ -16,9 +16,14 @@
 
 package com.google.graphite.platforms.plugin.client;
 
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.buildLabelsFilterString;
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.AttachedDisk;
+import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
 import com.google.api.services.compute.model.Image;
 import com.google.api.services.compute.model.Instance;
@@ -36,9 +41,7 @@ import com.google.api.services.compute.model.Zone;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -58,18 +61,6 @@ public class ComputeClient {
 
   public ComputeClient(Compute compute) {
     this.compute = compute;
-  }
-
-  public static String nameFromSelfLink(String selfLink) {
-    return selfLink.substring(selfLink.lastIndexOf("/") + 1);
-  }
-
-  public static String buildLabelsFilterString(Map<String, String> labels) {
-    StringBuilder sb = new StringBuilder();
-    for (Map.Entry<String, String> l : labels.entrySet()) {
-      sb.append("(labels." + l.getKey() + " eq " + l.getValue() + ") ");
-    }
-    return sb.toString().trim();
   }
 
   public static List<Metadata.Items> mergeMetadataItems(
@@ -99,66 +90,24 @@ public class ComputeClient {
    */
   public List<Region> getRegions(String projectId) throws IOException {
     List<Region> regions = compute.regions().list(projectId).execute().getItems();
-    if (regions == null) {
-      return new ArrayList<>();
-    }
-
-    // No deprecated regions
-    Iterator it = regions.iterator();
-    while (it.hasNext()) {
-      Region o = (Region) it.next();
-      if (o.getDeprecated() != null
-          && o.getDeprecated().getState().equalsIgnoreCase("DEPRECATED")) {
-        it.remove();
-      }
-    }
-
-    regions.sort(Comparator.comparing(Region::getName));
-
-    return regions;
+    return processResourceList(
+        regions, r -> !isDeprecated(r.getDeprecated()), Comparator.comparing(Region::getName));
   }
 
   public List<Zone> getZones(String projectId, String region) throws IOException {
     List<Zone> zones = compute.zones().list(projectId).execute().getItems();
-    if (zones == null) {
-      return new ArrayList<>();
-    }
-
-    // Only zones for the region
-    Iterator it = zones.iterator();
-    while (it.hasNext()) {
-      Zone o = (Zone) it.next();
-      if (!o.getRegion().equals(region)) {
-        it.remove();
-      }
-    }
-
-    zones.sort(Comparator.comparing(Zone::getName));
-
-    return zones;
+    return processResourceList(
+        zones, z -> region.equalsIgnoreCase(z.getRegion()), Comparator.comparing(Zone::getName));
   }
 
   public List<MachineType> getMachineTypes(String projectId, String zone) throws IOException {
     zone = nameFromSelfLink(zone);
     List<MachineType> machineTypes =
         compute.machineTypes().list(projectId, zone).execute().getItems();
-    if (machineTypes == null) {
-      return new ArrayList<>();
-    }
-
-    // No deprecated items
-    Iterator it = machineTypes.iterator();
-    while (it.hasNext()) {
-      MachineType o = (MachineType) it.next();
-      if (o.getDeprecated() != null
-          && o.getDeprecated().getState().equalsIgnoreCase("DEPRECATED")) {
-        it.remove();
-      }
-    }
-
-    machineTypes.sort(Comparator.comparing(MachineType::getName));
-
-    return machineTypes;
+    return processResourceList(
+        machineTypes,
+        o -> !isDeprecated(o.getDeprecated()),
+        Comparator.comparing(MachineType::getName));
   }
 
   public List<String> cpuPlatforms(String projectId, String zone) throws IOException {
@@ -173,24 +122,9 @@ public class ComputeClient {
 
   public List<DiskType> getDiskTypes(String projectId, String zone) throws IOException {
     zone = nameFromSelfLink(zone);
-    List<DiskType> diskTypes = compute.diskTypes().list(projectId, zone).execute().getItems();
-    if (diskTypes == null) {
-      return new ArrayList<>();
-    }
-
-    // No deprecated items
-    Iterator it = diskTypes.iterator();
-    while (it.hasNext()) {
-      DiskType o = (DiskType) it.next();
-      if (o.getDeprecated() != null
-          && o.getDeprecated().getState().equalsIgnoreCase("DEPRECATED")) {
-        it.remove();
-      }
-    }
-
-    diskTypes.sort(Comparator.comparing(DiskType::getName));
-
-    return diskTypes;
+    List<DiskType> diskTypes = getDiskTypeList(projectId, zone);
+    return processResourceList(
+        diskTypes, d -> !isDeprecated(d.getDeprecated()), Comparator.comparing(DiskType::getName));
   }
 
   public List<DiskType> getBootDiskTypes(String projectId, String zone) throws IOException {
@@ -198,35 +132,20 @@ public class ComputeClient {
     List<DiskType> diskTypes = this.getDiskTypes(projectId, zone);
 
     // No local disks
-    Iterator it = diskTypes.iterator();
-    while (it.hasNext()) {
-      DiskType o = (DiskType) it.next();
-      if (o.getName().startsWith("local-")) {
-        it.remove();
-      }
-    }
-    return diskTypes;
+    return processResourceList(
+        diskTypes,
+        d -> !isDeprecated(d.getDeprecated()) && !d.getName().startsWith("local-"),
+        Comparator.comparing(DiskType::getName));
+  }
+
+  private List<DiskType> getDiskTypeList(String projectId, String zone) throws IOException {
+    return compute.diskTypes().list(projectId, zone).execute().getItems();
   }
 
   public List<Image> getImages(String projectId) throws IOException {
     List<Image> images = compute.images().list(projectId).execute().getItems();
-    if (images == null) {
-      return new ArrayList<>();
-    }
-
-    // No deprecated items
-    Iterator it = images.iterator();
-    while (it.hasNext()) {
-      Image o = (Image) it.next();
-      if (o.getDeprecated() != null
-          && o.getDeprecated().getState().equalsIgnoreCase("DEPRECATED")) {
-        it.remove();
-      }
-    }
-
-    images.sort(Comparator.comparing(Image::getName));
-
-    return images;
+    return processResourceList(
+        images, i -> !isDeprecated(i.getDeprecated()), Comparator.comparing(Image::getName));
   }
 
   public Image getImage(String projectId, String name) throws IOException {
@@ -241,30 +160,15 @@ public class ComputeClient {
 
     List<AcceleratorType> acceleratorTypes =
         compute.acceleratorTypes().list(projectId, zone).execute().getItems();
-    if (acceleratorTypes == null) {
-      return new ArrayList<>();
-    }
-
-    // No deprecated items
-    Iterator it = acceleratorTypes.iterator();
-    while (it.hasNext()) {
-      AcceleratorType o = (AcceleratorType) it.next();
-      if (o.getDeprecated() != null
-          && o.getDeprecated().getState().equalsIgnoreCase("DEPRECATED")) {
-        it.remove();
-      }
-    }
-    acceleratorTypes.sort(Comparator.comparing(AcceleratorType::getName));
-    return acceleratorTypes;
+    return processResourceList(
+        acceleratorTypes,
+        a -> !isDeprecated(a.getDeprecated()),
+        Comparator.comparing(AcceleratorType::getName));
   }
 
   public List<Network> getNetworks(String projectId) throws IOException {
     List<Network> networks = compute.networks().list(projectId).execute().getItems();
-
-    if (networks == null) {
-      return new ArrayList<>();
-    }
-    return networks;
+    return processResourceList(networks, Comparator.comparing(Network::getName));
   }
 
   public List<Subnetwork> getSubnetworks(String projectId, String networkSelfLink, String region)
@@ -272,21 +176,10 @@ public class ComputeClient {
     region = nameFromSelfLink(region);
     List<Subnetwork> subnetworks =
         compute.subnetworks().list(projectId, region).execute().getItems();
-    if (subnetworks == null) {
-      return new ArrayList<>();
-    }
-
-    // Only subnetworks in the parent network
-    Iterator it = subnetworks.iterator();
-    while (it.hasNext()) {
-      Subnetwork o = (Subnetwork) it.next();
-      if (!o.getNetwork().equals(networkSelfLink)) {
-        it.remove();
-      }
-    }
-
-    subnetworks.sort(Comparator.comparing(Subnetwork::getName));
-    return subnetworks;
+    return processResourceList(
+        subnetworks,
+        s -> s.getNetwork().equalsIgnoreCase(networkSelfLink),
+        Comparator.comparing(Subnetwork::getName));
   }
 
   public Operation insertInstance(String projectId, String template, Instance instance)
@@ -359,14 +252,7 @@ public class ComputeClient {
   public List<InstanceTemplate> getTemplates(String projectId) throws IOException {
     List<InstanceTemplate> instanceTemplates =
         compute.instanceTemplates().list(projectId).execute().getItems();
-    if (instanceTemplates == null) {
-      instanceTemplates = Collections.emptyList();
-    }
-
-    // Sort by name
-    instanceTemplates.sort(Comparator.comparing(InstanceTemplate::getName));
-
-    return instanceTemplates;
+    return processResourceList(instanceTemplates, Comparator.comparing(InstanceTemplate::getName));
   }
 
   /**
@@ -533,5 +419,9 @@ public class ComputeClient {
       }
     }
     return operation.getError();
+  }
+
+  private static boolean isDeprecated(DeprecationStatus deprecated) {
+    return deprecated != null && deprecated.getState().equalsIgnoreCase("DEPRECATED");
   }
 }

@@ -31,6 +31,7 @@ import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.RegionList;
 import com.google.api.services.compute.model.Zone;
 import com.google.api.services.compute.model.ZoneList;
+import com.google.graphite.platforms.plugin.client.util.ClientUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -193,10 +194,10 @@ public class ComputeClientTest {
     String zone;
 
     zone = "https://www.googleapis.com/compute/v1/projects/evandbrown17/zones/asia-east1-a";
-    assertEquals("asia-east1-a", ComputeClient.nameFromSelfLink(zone));
+    assertEquals("asia-east1-a", ClientUtil.nameFromSelfLink(zone));
 
     zone = "asia-east1-a";
-    assertEquals("asia-east1-a", ComputeClient.nameFromSelfLink(zone));
+    assertEquals("asia-east1-a", ClientUtil.nameFromSelfLink(zone));
   }
 
   @Test
@@ -206,7 +207,7 @@ public class ComputeClientTest {
     labels.put("key2", "value2");
     String expect = "(labels.key1 eq value1) (labels.key2 eq value2)";
 
-    String got = ComputeClient.buildLabelsFilterString(labels);
+    String got = ClientUtil.buildLabelsFilterString(labels);
     assertEquals(expect, got);
   }
 

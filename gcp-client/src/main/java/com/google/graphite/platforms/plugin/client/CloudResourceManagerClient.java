@@ -16,6 +16,8 @@
 
 package com.google.graphite.platforms.plugin.client;
 
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+
 import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.model.Project;
 import com.google.common.base.Preconditions;
@@ -51,13 +53,6 @@ public class CloudResourceManagerClient {
    */
   public ImmutableList<Project> getAccountProjects() throws IOException {
     List<Project> projects = cloudResourceManager.projects().list().execute().getProjects();
-    if (projects == null) {
-      projects = ImmutableList.of();
-    }
-
-    // Sort by project ID
-    projects.sort(Comparator.comparing(Project::getProjectId));
-
-    return ImmutableList.copyOf(projects);
+    return processResourceList(projects, Comparator.comparing(Project::getProjectId));
   }
 }
