@@ -35,7 +35,6 @@ import com.google.api.services.compute.model.Network;
 import com.google.api.services.compute.model.Operation;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Snapshot;
-import com.google.api.services.compute.model.SnapshotList;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
 import com.google.common.base.Preconditions;
@@ -96,58 +95,62 @@ public class ComputeClient {
         Comparator.comparing(Region::getName));
   }
 
-  public List<Zone> getZones(final String projectId, final String region) throws IOException {
+  public List<Zone> getZones(final String projectId, final String regionLink) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(region));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
         compute.zones().list(projectId).execute().getItems(),
-        z -> region.equalsIgnoreCase(z.getRegion()),
+        z -> regionLink.equalsIgnoreCase(z.getRegion()),
         Comparator.comparing(Zone::getName));
   }
 
-  public List<MachineType> getMachineTypes(final String projectId, final String zone)
+  public List<MachineType> getMachineTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        compute.machineTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
+        compute.machineTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems(),
         o -> !isDeprecated(o.getDeprecated()),
         Comparator.comparing(MachineType::getName));
   }
 
-  public List<String> cpuPlatforms(final String projectId, final String zone) throws IOException {
+  public List<String> getCpuPlatforms(final String projectId, final String zoneLink)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
-    Zone zoneObject = compute.zones().get(projectId, zone).execute();
-    if (zoneObject == null) {
-      return ImmutableList.of();
-    }
-    return ImmutableList.copyOf(zoneObject.getAvailableCpuPlatforms());
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
+    return processResourceList(
+        compute
+            .zones()
+            .get(projectId, nameFromSelfLink(zoneLink))
+            .execute()
+            .getAvailableCpuPlatforms(),
+        String::compareTo);
   }
 
-  public List<DiskType> getDiskTypes(final String projectId, final String zone) throws IOException {
+  public List<DiskType> getDiskTypes(final String projectId, final String zoneLink)
+      throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        getDiskTypeList(projectId, zone),
+        getDiskTypeList(projectId, zoneLink),
         d -> !isDeprecated(d.getDeprecated()),
         Comparator.comparing(DiskType::getName));
   }
 
-  public List<DiskType> getBootDiskTypes(final String projectId, final String zone)
+  public List<DiskType> getBootDiskTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        this.getDiskTypeList(projectId, zone),
+        this.getDiskTypeList(projectId, zoneLink),
         // No local disks
         d -> !isDeprecated(d.getDeprecated()) && !d.getName().startsWith("local-"),
         Comparator.comparing(DiskType::getName));
   }
 
-  private List<DiskType> getDiskTypeList(final String projectId, final String zone)
+  private List<DiskType> getDiskTypeList(final String projectId, final String zoneLink)
       throws IOException {
-    return compute.diskTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
+    return compute.diskTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems();
   }
 
   public List<Image> getImages(final String projectId) throws IOException {
@@ -158,18 +161,18 @@ public class ComputeClient {
         Comparator.comparing(Image::getName));
   }
 
-  public Image getImage(final String projectId, final String name) throws IOException {
+  public Image getImage(final String projectId, final String imageName) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
-    return compute.images().get(projectId, name).execute();
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(imageName));
+    return compute.images().get(projectId, imageName).execute();
   }
 
-  public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zone)
+  public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zoneLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     return processResourceList(
-        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
+        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zoneLink)).execute().getItems(),
         a -> !isDeprecated(a.getDeprecated()),
         Comparator.comparing(AcceleratorType::getName));
   }
@@ -182,50 +185,50 @@ public class ComputeClient {
   }
 
   public List<Subnetwork> getSubnetworks(
-      final String projectId, final String networkSelfLink, final String region)
+      final String projectId, final String networkLink, final String regionLink)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(networkSelfLink));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(region));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(networkLink));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(regionLink));
     return processResourceList(
-        compute.subnetworks().list(projectId, nameFromSelfLink(region)).execute().getItems(),
-        s -> s.getNetwork().equalsIgnoreCase(networkSelfLink),
+        compute.subnetworks().list(projectId, nameFromSelfLink(regionLink)).execute().getItems(),
+        s -> s.getNetwork().equalsIgnoreCase(networkLink),
         Comparator.comparing(Subnetwork::getName));
   }
 
   public Operation insertInstance(
-      final String projectId, final Optional<String> template, final Instance instance)
+      final String projectId, final Optional<String> templateLink, final Instance instance)
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instance);
     final Compute.Instances.Insert insert =
         compute.instances().insert(projectId, instance.getZone(), instance);
-    if (template.isPresent()) {
-      Preconditions.checkArgument(!template.get().isEmpty());
-      insert.setSourceInstanceTemplate(template.get());
+    if (templateLink.isPresent()) {
+      Preconditions.checkArgument(!templateLink.get().isEmpty());
+      insert.setSourceInstanceTemplate(templateLink.get());
     }
     return insert.execute();
   }
 
   public Operation terminateInstance(
-      final String projectId, final String zone, final String instanceId) throws IOException {
+      final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
-    return compute.instances().delete(projectId, nameFromSelfLink(zone), instanceId).execute();
+    return compute.instances().delete(projectId, nameFromSelfLink(zoneLink), instanceId).execute();
   }
 
   public Operation terminateInstanceWithStatus(
       final String projectId,
-      final String zone,
+      final String zoneLink,
       final String instanceId,
       final String desiredStatus)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(desiredStatus));
-    final String zoneName = nameFromSelfLink(zone);
+    final String zoneName = nameFromSelfLink(zoneLink);
     Instance i = getInstance(projectId, zoneName, instanceId);
     if (i.getStatus().equals(desiredStatus)) {
       return compute.instances().delete(projectId, zoneName, instanceId).execute();
@@ -233,12 +236,12 @@ public class ComputeClient {
     return null;
   }
 
-  public Instance getInstance(final String projectId, final String zone, final String instanceId)
-      throws IOException {
+  public Instance getInstance(
+      final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
-    return compute.instances().get(projectId, nameFromSelfLink(zone), instanceId).execute();
+    return compute.instances().get(projectId, nameFromSelfLink(zoneLink), instanceId).execute();
   }
 
   /**
@@ -297,20 +300,20 @@ public class ComputeClient {
    * operation completes.
    *
    * @param projectId Google cloud project id (e.g. my-project).
-   * @param zone Instance's zone.
+   * @param zoneLink Self link of the instance's zone.
    * @param instanceId Name of the instance whose disks to take a snapshot of.
    * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation or in retrieving the instance.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
   public void createSnapshot(
-      final String projectId, final String zone, final String instanceId, final long timeout)
+      final String projectId, final String zoneLink, final String instanceId, final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     Preconditions.checkArgument(timeout > 0);
-    String zoneName = nameFromSelfLink(zone);
+    String zoneName = nameFromSelfLink(zoneLink);
     Instance instance;
     try {
       instance = compute.instances().get(projectId, zoneName, instanceId).execute();
@@ -345,23 +348,24 @@ public class ComputeClient {
    * Given a disk's name, create a snapshot for said disk.
    *
    * @param projectId Google cloud project id.
-   * @param zone Zone of disk.
-   * @param diskId Name of disk to create a snapshot for.
+   * @param zoneName Zone of disk.
+   * @param diskName Name of disk to create a snapshot for.
    * @param timeout The number of milliseconds to wait for snapshot creation.
    * @throws IOException If an error occured in snapshot creation.
    * @throws InterruptedException If snapshot creation is interrupted.
    */
   public void createSnapshotForDisk(
-      final String projectId, final String zone, final String diskId, final long timeout)
+      final String projectId, final String zoneName, final String diskName, final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(diskId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneName));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(diskName));
     Preconditions.checkArgument(timeout > 0);
     Snapshot snapshot = new Snapshot();
-    snapshot.setName(diskId);
+    snapshot.setName(diskName);
 
-    Operation op = compute.disks().createSnapshot(projectId, zone, diskId, snapshot).execute();
+    Operation op =
+        compute.disks().createSnapshot(projectId, zoneName, diskName, snapshot).execute();
     // poll for result
     waitForOperationCompletion(projectId, op, timeout);
   }
@@ -391,38 +395,27 @@ public class ComputeClient {
       throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(snapshotName));
-    SnapshotList response;
-    Compute.Snapshots.List request = compute.snapshots().list(projectId);
-
-    do {
-      response = request.execute();
-      if (response.getItems() == null) {
-        continue;
-      }
-      for (Snapshot snapshot : response.getItems()) {
-        if (snapshotName.equals(snapshot.getName())) return snapshot;
-      }
-      request.setPageToken(response.getNextPageToken());
-    } while (response.getNextPageToken() != null);
-
-    return null;
+    return compute.snapshots().get(projectId, snapshotName).execute();
   }
 
   /**
    * Return an operation in the provided zone.
    *
    * @param projectId The ID of the project for the {@link Operation} to retrieve.
-   * @param zone The self link of the zone for the {@link Operation} to retrieve.
+   * @param zoneLink The self link of the zone for the {@link Operation} to retrieve.
    * @param operationId The ID of the {@link Operation} to retrieve.
    * @return The {@link Operation} specified by the inputs.
    * @throws IOException There was an error retrieving the specified {@link Operation}.
    */
   public Operation getZoneOperation(
-      final String projectId, final String zone, final String operationId) throws IOException {
+      final String projectId, final String zoneLink, final String operationId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(operationId));
-    return compute.zoneOperations().get(projectId, nameFromSelfLink(zone), operationId).execute();
+    return compute
+        .zoneOperations()
+        .get(projectId, nameFromSelfLink(zoneLink), operationId)
+        .execute();
   }
 
   /**
@@ -430,7 +423,7 @@ public class ComputeClient {
    * Otherwise, metadata is preserved. This method blocks until the operation completes.
    *
    * @param projectId The ID of the project for the instance.
-   * @param zone The self link of the zone for the instance.
+   * @param zoneLink The self link of the zone for the instance.
    * @param instanceId The ID of the instance.
    * @param items The new metadata items to append to existing metadata.
    * @param timeout The number of milliseconds to wait for the operation to timeout.
@@ -439,17 +432,17 @@ public class ComputeClient {
    */
   public Operation.Error appendInstanceMetadata(
       final String projectId,
-      final String zone,
+      final String zoneLink,
       final String instanceId,
       final List<Metadata.Items> items,
       final long timeout)
       throws IOException, InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(!Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     Preconditions.checkNotNull(items);
     Preconditions.checkArgument(timeout > 0);
-    String zoneName = nameFromSelfLink(zone);
+    String zoneName = nameFromSelfLink(zoneLink);
     Instance instance = getInstance(projectId, zoneName, instanceId);
     Metadata existingMetadata = instance.getMetadata();
 
@@ -476,17 +469,17 @@ public class ComputeClient {
    *
    * @param projectId The ID of the project for this {@link Operation}.
    * @param operationId The ID of the {@link Operation}.
-   * @param zone The self-link of the zone for the {@link Operation}.
+   * @param zoneLink The self-link of the zone for the {@link Operation}.
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The {@link Operation.Error} for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
    */
   public Operation.Error waitForOperationCompletion(
-      final String projectId, final String operationId, final String zone, final long timeout)
+      final String projectId, final String operationId, final String zoneLink, final long timeout)
       throws InterruptedException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(Strings.isNullOrEmpty(operationId));
-    Preconditions.checkArgument(Strings.isNullOrEmpty(zone));
+    Preconditions.checkArgument(Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(timeout > 0);
 
     // Used to hold the Operation.Error which comes from polling the Operation in lambda expression.
@@ -500,7 +493,7 @@ public class ComputeClient {
               () -> {
                 LOGGER.log(Level.FINE, "Waiting for operation " + operationId + " to complete..");
                 try {
-                  Operation op = getZoneOperation(projectId, zone, operationId);
+                  Operation op = getZoneOperation(projectId, zoneLink, operationId);
                   // Store the error here.
                   operation.setError(op.getError());
                   return isOperationDone(op);

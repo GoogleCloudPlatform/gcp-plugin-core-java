@@ -16,7 +16,6 @@
 
 package com.google.graphite.platforms.plugin.client.util;
 
-import com.google.api.client.json.GenericJson;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.List;
@@ -36,11 +35,11 @@ public class ClientUtil {
    *     then that object will be kept in the final result.
    * @param comparator Defines a comparison between any two objects in {@param items} used for
    *     sorting the result.
-   * @param <T> Any GCP resource type from the GCP client library, extending {@link GenericJson}.
+   * @param <T> The type of the list elements
    * @return An {@link ImmutableList} which is empty if {@param items} is null or empty, and
    *     otherwise is {@param items} filtered and sorted as described above.
    */
-  public static <T extends GenericJson> ImmutableList<T> processResourceList(
+  public static <T> ImmutableList<T> processResourceList(
       final List<T> items, final Predicate<T> filter, final Comparator<T> comparator) {
     if (items == null) {
       return ImmutableList.of();
@@ -55,11 +54,11 @@ public class ClientUtil {
    * @param items A list of GCP resources produced by a GCP client library request.
    * @param comparator Defines a comparison between any two objects in {@param items} used for
    *     sorting the result.
-   * @param <T> Any GCP resource type from the GCP client library, extending {@link GenericJson}.
+   * @param <T> The type of the list elements.
    * @return An {@link ImmutableList} which is empty if {@param items} is null or empty, and
    *     otherwise is {@param items} filtered and sorted as described above.
    */
-  public static <T extends GenericJson> ImmutableList<T> processResourceList(
+  public static <T> ImmutableList<T> processResourceList(
       final List<T> items, final Comparator<T> comparator) {
     return processResourceList(items, n -> true, comparator);
   }
