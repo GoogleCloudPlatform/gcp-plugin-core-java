@@ -21,33 +21,38 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
 
-  <!--TODO(stephenashank) Prepare for maven release -->
   <artifactId>gcp-client</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <name>GCP Plugin Clients</name>
   <description>These classes provide shared GCP client functionality.</description>
 
+  <properties>
+    <container.revision>57</container.revision>
+    <compute.revision>214</compute.revision>
+    <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-container</artifactId>
-      <version>v1-rev57-1.25.0</version>
+      <version>v1-rev${container.revision}-${google.api.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-compute</artifactId>
-      <version>v1-rev199-1.22.0</version>
+      <version>v1-rev${compute.revision}-${google.api.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudresourcemanager</artifactId>
-      <version>v1-rev535-1.25.0</version>
+      <version>v1-rev${cloudresourcemanager.revision}-${google.api.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
-      <version>1.25.0</version>
+      <version>${google.api.version}</version>
     </dependency>
   </dependencies>
 </project>
