@@ -14,11 +14,12 @@
 
 package com.google.graphite.platforms.plugin.client;
 
+import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.graphite.platforms.plugin.client.util.ClientUtil;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -74,15 +75,15 @@ public class ContainerClient {
    */
   public List<Cluster> listAllClusters(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    List<Cluster> clusters =
+    return processResourceList(
         container
             .projects()
             .locations()
             .clusters()
             .list(toApiParent(projectId))
             .execute()
-            .getClusters();
-    return ClientUtil.processResourceList(clusters, Comparator.comparing(Cluster::getName));
+            .getClusters(),
+        Comparator.comparing(Cluster::getName));
   }
 
   private static String toApiName(

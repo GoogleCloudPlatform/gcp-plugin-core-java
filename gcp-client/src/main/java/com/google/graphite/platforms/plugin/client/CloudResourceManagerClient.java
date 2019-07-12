@@ -24,7 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * Client for communicating with the Google Cloud Research Manager API.
@@ -52,7 +51,8 @@ public class CloudResourceManagerClient {
    * @throws IOException When an error occurred attempting to get the projects.
    */
   public ImmutableList<Project> getAccountProjects() throws IOException {
-    List<Project> projects = cloudResourceManager.projects().list().execute().getProjects();
-    return processResourceList(projects, Comparator.comparing(Project::getProjectId));
+    return processResourceList(
+        cloudResourceManager.projects().list().execute().getProjects(),
+        Comparator.comparing(Project::getProjectId));
   }
 }

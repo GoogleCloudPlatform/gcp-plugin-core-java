@@ -39,6 +39,7 @@ import com.google.api.services.compute.model.SnapshotList;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -89,49 +90,47 @@ public class ComputeClient {
    * @throws IOException
    */
   public List<Region> getRegions(final String projectId) throws IOException {
-    List<Region> regions = compute.regions().list(projectId).execute().getItems();
     return processResourceList(
-        regions, r -> !isDeprecated(r.getDeprecated()), Comparator.comparing(Region::getName));
+        compute.regions().list(projectId).execute().getItems(),
+        r -> !isDeprecated(r.getDeprecated()),
+        Comparator.comparing(Region::getName));
   }
 
   public List<Zone> getZones(final String projectId, final String region) throws IOException {
-    List<Zone> zones = compute.zones().list(projectId).execute().getItems();
     return processResourceList(
-        zones, z -> region.equalsIgnoreCase(z.getRegion()), Comparator.comparing(Zone::getName));
+        compute.zones().list(projectId).execute().getItems(),
+        z -> region.equalsIgnoreCase(z.getRegion()),
+        Comparator.comparing(Zone::getName));
   }
 
   public List<MachineType> getMachineTypes(final String projectId, final String zone)
       throws IOException {
-    List<MachineType> machineTypes =
-        compute.machineTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
     return processResourceList(
-        machineTypes,
+        compute.machineTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
         o -> !isDeprecated(o.getDeprecated()),
         Comparator.comparing(MachineType::getName));
   }
 
   public List<String> cpuPlatforms(final String projectId, final String zone) throws IOException {
-    List<String> cpuPlatforms = new ArrayList<>();
     Zone zoneObject = compute.zones().get(projectId, zone).execute();
     if (zoneObject == null) {
-      return cpuPlatforms;
+      return ImmutableList.of();
     }
-    return zoneObject.getAvailableCpuPlatforms();
+    return ImmutableList.copyOf(zoneObject.getAvailableCpuPlatforms());
   }
 
   public List<DiskType> getDiskTypes(final String projectId, final String zone) throws IOException {
-    List<DiskType> diskTypes = getDiskTypeList(projectId, zone);
     return processResourceList(
-        diskTypes, d -> !isDeprecated(d.getDeprecated()), Comparator.comparing(DiskType::getName));
+        getDiskTypeList(projectId, zone),
+        d -> !isDeprecated(d.getDeprecated()),
+        Comparator.comparing(DiskType::getName));
   }
 
   public List<DiskType> getBootDiskTypes(final String projectId, final String zone)
       throws IOException {
-    List<DiskType> diskTypes = this.getDiskTypes(projectId, zone);
-
-    // No local disks
     return processResourceList(
-        diskTypes,
+        this.getDiskTypeList(projectId, zone),
+        // No local disks
         d -> !isDeprecated(d.getDeprecated()) && !d.getName().startsWith("local-"),
         Comparator.comparing(DiskType::getName));
   }
@@ -142,39 +141,35 @@ public class ComputeClient {
   }
 
   public List<Image> getImages(final String projectId) throws IOException {
-    List<Image> images = compute.images().list(projectId).execute().getItems();
     return processResourceList(
-        images, i -> !isDeprecated(i.getDeprecated()), Comparator.comparing(Image::getName));
+        compute.images().list(projectId).execute().getItems(),
+        i -> !isDeprecated(i.getDeprecated()),
+        Comparator.comparing(Image::getName));
   }
 
   public Image getImage(final String projectId, final String name) throws IOException {
-    Image image = compute.images().get(projectId, name).execute();
-
-    return image;
+    return compute.images().get(projectId, name).execute();
   }
 
   public List<AcceleratorType> getAcceleratorTypes(final String projectId, final String zone)
       throws IOException {
-    List<AcceleratorType> acceleratorTypes =
-        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems();
     return processResourceList(
-        acceleratorTypes,
+        compute.acceleratorTypes().list(projectId, nameFromSelfLink(zone)).execute().getItems(),
         a -> !isDeprecated(a.getDeprecated()),
         Comparator.comparing(AcceleratorType::getName));
   }
 
   public List<Network> getNetworks(final String projectId) throws IOException {
-    List<Network> networks = compute.networks().list(projectId).execute().getItems();
-    return processResourceList(networks, Comparator.comparing(Network::getName));
+    return processResourceList(
+        compute.networks().list(projectId).execute().getItems(),
+        Comparator.comparing(Network::getName));
   }
 
   public List<Subnetwork> getSubnetworks(
       final String projectId, final String networkSelfLink, final String region)
       throws IOException {
-    List<Subnetwork> subnetworks =
-        compute.subnetworks().list(projectId, nameFromSelfLink(region)).execute().getItems();
     return processResourceList(
-        subnetworks,
+        compute.subnetworks().list(projectId, nameFromSelfLink(region)).execute().getItems(),
         s -> s.getNetwork().equalsIgnoreCase(networkSelfLink),
         Comparator.comparing(Subnetwork::getName));
   }
@@ -250,9 +245,9 @@ public class ComputeClient {
   }
 
   public List<InstanceTemplate> getTemplates(final String projectId) throws IOException {
-    List<InstanceTemplate> instanceTemplates =
-        compute.instanceTemplates().list(projectId).execute().getItems();
-    return processResourceList(instanceTemplates, Comparator.comparing(InstanceTemplate::getName));
+    return processResourceList(
+        compute.instanceTemplates().list(projectId).execute().getItems(),
+        Comparator.comparing(InstanceTemplate::getName));
   }
 
   /**
