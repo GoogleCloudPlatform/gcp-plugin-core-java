@@ -526,7 +526,6 @@ public class ComputeClient {
     snapshot.setName(diskName);
 
     Operation op = compute.createDiskSnapshot(projectId, zoneName, diskName, snapshot);
-    // poll for result
     return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
   }
 
