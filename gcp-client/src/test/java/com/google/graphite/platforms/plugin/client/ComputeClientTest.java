@@ -26,12 +26,9 @@ import com.google.api.services.compute.model.MachineType;
 import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Zone;
-import com.google.graphite.platforms.plugin.client.util.ClientUtil;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -139,28 +136,6 @@ public class ComputeClientTest {
 
     assertEquals(3, computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").size());
     assertEquals("a", computeClient.getBootDiskTypes(TEST_PROJECT_ID, "test").get(0).getName());
-  }
-
-  @Test
-  public void nameFromSelfLink() {
-    String zone;
-
-    zone = "https://www.googleapis.com/compute/v1/projects/evandbrown17/zones/asia-east1-a";
-    assertEquals("asia-east1-a", ClientUtil.nameFromSelfLink(zone));
-
-    zone = "asia-east1-a";
-    assertEquals("asia-east1-a", ClientUtil.nameFromSelfLink(zone));
-  }
-
-  @Test
-  public void labelsToFilterString() {
-    Map<String, String> labels = new LinkedHashMap<>();
-    labels.put("key1", "value1");
-    labels.put("key2", "value2");
-    String expect = "(labels.key1 eq value1) (labels.key2 eq value2)";
-
-    String got = ClientUtil.buildLabelsFilterString(labels);
-    assertEquals(expect, got);
   }
 
   @Test
