@@ -463,12 +463,14 @@ public class ComputeClient {
    * @param zoneLink Self link of the instance's zone.
    * @param instanceId Name of the instance whose disks to take a snapshot of.
    * @param timeout The number of milliseconds to wait for snapshot creation.
-   * @throws IOException If an error occured in snapshot creation or in retrieving the instance.
+   * @throws IOException If an error occurred in starting the snapshot creation {@link Operation} or
+   *     when retrieving the instance.
    * @throws InterruptedException If snapshot creation is interrupted.
+   * @throws OperationException If any errors occurred during the operation.
    */
   public void createSnapshotSync(
       final String projectId, final String zoneLink, final String instanceId, final long timeout)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, OperationException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
@@ -500,6 +502,9 @@ public class ComputeClient {
                          * throw InterruptedException from trying to terminate node */
                         LOGGER.log(Level.WARNING, "Interruption in creating snapshot.", ie);
                         throw ie;
+                      } catch (OperationException oe) {
+                        LOGGER.log(Level.WARNING, "Error in completing operation.");
+                        throw oe;
                       }
                     }));
   }
@@ -512,12 +517,14 @@ public class ComputeClient {
    * @param zoneName Zone of disk.
    * @param diskName Name of disk to create a snapshot for.
    * @param timeout The number of milliseconds to wait for snapshot creation.
-   * @throws IOException If an error occured in snapshot creation.
+   * @return The {@link Operation} that was performed.
+   * @throws IOException If an error occurred in starting the snapshot creation operation.
    * @throws InterruptedException If snapshot creation is interrupted.
+   * @throws OperationException If any errors occurred during the operation.
    */
-  public Operation.Error createSnapshotForDiskSync(
+  public Operation createSnapshotForDiskSync(
       final String projectId, final String zoneName, final String diskName, final long timeout)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, OperationException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneName));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(diskName));
@@ -584,16 +591,19 @@ public class ComputeClient {
    * @param instanceId The ID of the instance.
    * @param items The new metadata items to append to existing metadata.
    * @param timeout The number of milliseconds to wait for the operation to timeout.
-   * @throws IOException If there was an error retrieving the instance.
+   * @return The final state of the {@link Operation} that was performed.
+   * @throws IOException If there was an error retrieving the instance or starting the append
+   *     operation.
    * @throws InterruptedException If the operation to set metadata timed out.
+   * @throws OperationException If any errors occurred during the append operation.
    */
-  public Operation.Error appendInstanceMetadataSync(
+  public Operation appendInstanceMetadataSync(
       final String projectId,
       final String zoneLink,
       final String instanceId,
       final List<Metadata.Items> items,
       final long timeout)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, OperationException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
@@ -616,12 +626,12 @@ public class ComputeClient {
    * @param projectId The ID of the project for this {@link Operation}.
    * @param operation The {@link Operation} to reference.
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
-   * @return The {@link Operation.Error} for the completed {@link Operation}.
+   * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
    */
-  public Operation.Error waitForOperationCompletion(
+  public Operation waitForOperationCompletion(
       final String projectId, final Operation operation, final long timeout)
-      throws InterruptedException {
+      throws InterruptedException, OperationException {
     // Intentionally omit other argument checks to use the ones in the other method.
     Preconditions.checkNotNull(operation);
     return waitForOperationCompletion(projectId, operation.getName(), operation.getZone(), timeout);
@@ -634,12 +644,12 @@ public class ComputeClient {
    * @param operationName The name of the {@link Operation}.
    * @param zoneLink The self-link of the zone for the {@link Operation}.
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
-   * @return The {@link Operation.Error} for the completed {@link Operation}.
+   * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
    */
-  public Operation.Error waitForOperationCompletion(
+  public Operation waitForOperationCompletion(
       final String projectId, final String operationName, final String zoneLink, final long timeout)
-      throws InterruptedException {
+      throws InterruptedException, OperationException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(Strings.isNullOrEmpty(operationName));
     Preconditions.checkArgument(Strings.isNullOrEmpty(zoneLink));
@@ -668,7 +678,10 @@ public class ComputeClient {
     } catch (ConditionTimeoutException e) {
       throw new InterruptedException("Timed out waiting for operation to complete.");
     }
-    return operation.getError();
+    if (operation.getError() != null) {
+      throw new OperationException(operation.getError());
+    }
+    return operation;
   }
 
   private boolean isOperationDone(final Operation operation) {
@@ -680,5 +693,40 @@ public class ComputeClient {
 
   private static boolean isDeprecated(final DeprecationStatus deprecated) {
     return deprecated != null && deprecated.getState().equalsIgnoreCase("DEPRECATED");
+  }
+
+  /** Wraps Operation.Error so that the exceptions must be caught. */
+  public static class OperationException extends Exception {
+    private Operation.Error error;
+
+    /**
+     * Constructor for {@link OperationException}.
+     *
+     * @param error An {@link Operation.Error} generated from a GCP {@link Operation}.
+     */
+    public OperationException(Operation.Error error) {
+      this("", error);
+    }
+
+    /**
+     * Constructor for {@link OperationException}.
+     *
+     * @param message A specialized message to use for this exception.
+     * @param error An {@link Operation.Error} generated from a GCP {@link Operation}.
+     */
+    public OperationException(String message, Operation.Error error) {
+      super(message);
+      this.error = error;
+    }
+
+    /**
+     * Retrieves the error that this exception wraps so that more specific information can be
+     * obtained when the exception is caught.
+     *
+     * @return The {@link Operation.Error} that this wraps.
+     */
+    public Operation.Error getError() {
+      return error;
+    }
   }
 }
