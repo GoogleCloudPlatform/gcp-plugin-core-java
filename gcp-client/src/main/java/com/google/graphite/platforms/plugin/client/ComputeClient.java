@@ -526,7 +526,7 @@ public class ComputeClient {
     snapshot.setName(diskName);
 
     Operation op = compute.createDiskSnapshot(projectId, zoneName, diskName, snapshot);
-    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
+    return waitForOperationCompletion(projectId, op, timeout);
   }
 
   /**
@@ -607,7 +607,24 @@ public class ComputeClient {
     existingMetadata.setItems(newMetadataItems);
 
     Operation op = compute.setInstanceMetadata(projectId, zoneName, instanceId, existingMetadata);
-    return waitForOperationCompletion(projectId, op.getName(), op.getZone(), timeout);
+    return waitForOperationCompletion(projectId, op, timeout);
+  }
+
+  /**
+   * Blocks until an existing {@link Operation} completes.
+   *
+   * @param projectId The ID of the project for this {@link Operation}.
+   * @param operation The {@link Operation} to reference.
+   * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
+   * @return The {@link Operation.Error} for the completed {@link Operation}.
+   * @throws InterruptedException If the operation was not completed before the timeout.
+   */
+  public Operation.Error waitForOperationCompletion(
+      final String projectId, final Operation operation, final long timeout)
+      throws InterruptedException {
+    // Intentionally omit other argument checks to use the ones in the other method.
+    Preconditions.checkNotNull(operation);
+    return waitForOperationCompletion(projectId, operation.getName(), operation.getZone(), timeout);
   }
 
   /**
