@@ -15,7 +15,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!--TODO(stephenashank) Prepare for maven release -->
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>9</version>
+  </parent>
+
   <groupId>com.google.graphite</groupId>
   <artifactId>gcp-plugin-core-java</artifactId>
   <version>1.0-SNAPSHOT</version>
@@ -23,6 +28,7 @@
 
   <name>GCP Plugin Core for Java</name>
   <description>This set of libraries provides common code used for Google Cloud Graphite's integrations to enable using GCP with popular open source platforms.</description>
+  <url>https://github.com/GoogleCloudPlatform/gcp-plugin-core-java</url>
   <organization>
     <name>Google</name>
     <url>https://www.google.com</url>
@@ -42,11 +48,6 @@
       <email>stephenshank@google.com</email>
     </developer>
     <developer>
-      <id>rachelyen</id>
-      <name>Rachel Yen</name>
-      <email>rachelyen@google.com</email>
-    </developer>
-    <developer>
       <id>craigatgoogle</id>
       <name>Craig Barber</name>
       <email>craigbarber@google.com</email>
@@ -56,6 +57,12 @@
   <modules>
     <module>gcp-client</module>
   </modules>
+
+  <scm>
+    <url>http://github.com/GoogleCloudPlatform/gcp-plugin-core-java/</url>
+    <connection>scm:git:git://github.com/GoogleCloudPlatform/gcp-plugin-core-java.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/GoogleCloudPlatform/gcp-plugin-core-java.git</developerConnection>
+  </scm>
 
   <properties>
     <java.level>8</java.level>
@@ -201,6 +208,7 @@
         <artifactId>cobertura-maven-plugin</artifactId>
         <version>${cobertura-maven.version}</version>
         <configuration>
+          <check/>
           <instrumentation>
             <excludes/>
           </instrumentation>

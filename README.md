@@ -27,9 +27,9 @@ You can use these libraries by including the following in your pom.xml:
 <dependencies>
   ...
   <dependency>
-    <groupId>TODO</groupId>
-    <artifactId>TODO</artifactId>
-    <version>TODO</version>
+    <groupId>com.google.graphite</groupId>
+    <artifactId>gcp-plugin-core-java</artifactId>
+    <version>1.0</version>
   </dependency>
   ...
 </dependencies>
