@@ -15,12 +15,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>9</version>
-  </parent>
-
   <groupId>com.google.graphite</groupId>
   <artifactId>gcp-plugin-core-java</artifactId>
   <version>1.0-SNAPSHOT</version>
@@ -63,12 +57,23 @@
     <connection>scm:git:git://github.com/GoogleCloudPlatform/gcp-plugin-core-java.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/GoogleCloudPlatform/gcp-plugin-core-java.git</developerConnection>
   </scm>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
 
   <properties>
     <java.level>8</java.level>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <google.api.version>1.25.0</google.api.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <google.api.version>1.29.2</google.api.version>
     <mockito.version>2.10.0</mockito.version>
     <junit.version>4.12</junit.version>
     <google.guava.version>19.0</google.guava.version>
@@ -76,10 +81,16 @@
     <xml-format-maven.version>3.0.7</xml-format-maven.version>
     <tidy-maven.version>1.1.0</tidy-maven.version>
     <fmt-maven.version>2.6.0</fmt-maven.version>
+    <!-- Skip at top level to avoid warnings. Specify as false in submodule properties. -->
+    <fmt-maven.skip>true</fmt-maven.skip>
     <maven-failsafe.version>2.20.1</maven-failsafe.version>
     <maven-surefire.version>${maven-failsafe.version}</maven-surefire.version>
-    <findbugs-maven.version>3.0.1</findbugs-maven.version>
+    <spotbugs.version>3.1.12</spotbugs.version>
     <cobertura-maven.version>2.7</cobertura-maven.version>
+    <maven-release.version>2.5.3</maven-release.version>
+    <maven-source.version>3.0.1</maven-source.version>
+    <maven-javadoc.version>3.1.1</maven-javadoc.version>
+    <maven-gpg.version>1.6</maven-gpg.version>
   </properties>
 
   <dependencies>
@@ -109,6 +120,7 @@
 
   <build>
     <plugins>
+      <!-- For automatic formatting-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -152,6 +164,14 @@
         <groupId>com.coveo</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
         <version>${fmt-maven.version}</version>
+        <configuration>
+          <style>google</style>
+          <skip>${fmt-maven.skip}</skip>
+          <skipSortingImports>${fmt-maven.skip}</skipSortingImports>
+          <verbose>true</verbose>
+          <detail>true</detail>
+          <displayFiles>true</displayFiles>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -160,6 +180,7 @@
           </execution>
         </executions>
       </plugin>
+      <!-- For testing/validation -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
@@ -181,14 +202,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${maven-surefire.version}</version>
-        <configuration>
-          <skipTests>${skip.surefire.tests}</skipTests>
-        </configuration>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <version>${findbugs-maven.version}</version>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>${spotbugs.version}</version>
         <configuration>
           <skip>true</skip>
           <effort>Max</effort>
@@ -218,6 +236,73 @@
           </formats>
         </configuration>
       </plugin>
+      <!-- For release-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven-release.version}</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
+          <preparationGoals>clean install</preparationGoals>
+          <goals>deploy</goals>
+          <completionGoals>xml-format:xml-format tidy:pom</completionGoals>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${maven-source.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${maven-javadoc.version}</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${maven-gpg.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+                <configuration>
+                  <keyname>${gpg.keyname}</keyname>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
