@@ -72,8 +72,7 @@ public class ComputeClient {
    *
    * @param winner The list of items that will be returned in the final result.
    * @param loser The list of items that will be returned in the final result, unless an item has
-   *     the same key as an item in {@param winner}, in which case the item from winner will be
-   *     used.
+   *     the same key as an item in winner, in which case the item from winner will be used.
    * @return The combined list of items from the input lists.
    */
   public static ImmutableList<Metadata.Items> mergeMetadataItems(
@@ -541,6 +540,7 @@ public class ComputeClient {
    *
    * @param projectId The ID of the project where the snapshot resides.
    * @param snapshotName Name of the snapshot to be deleted.
+   * @return The {@link Operation} that was performed.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
   public Operation deleteSnapshotAsync(final String projectId, final String snapshotName)
@@ -628,6 +628,7 @@ public class ComputeClient {
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
+   * @throws OperationException If there was an error performing the operation.
    */
   public Operation waitForOperationCompletion(
       final String projectId, final Operation operation, final long timeout)
@@ -646,6 +647,7 @@ public class ComputeClient {
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
+   * @throws OperationException If there was an error performing the operation.
    */
   public Operation waitForOperationCompletion(
       final String projectId, final String operationName, final String zoneLink, final long timeout)
