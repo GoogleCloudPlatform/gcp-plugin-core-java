@@ -21,6 +21,7 @@ import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFr
 import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.diffplug.common.base.Errors;
+import com.google.api.services.compute.Compute.Instances.SimulateMaintenanceEvent;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
@@ -71,8 +72,7 @@ public class ComputeClient {
    *
    * @param winner The list of items that will be returned in the final result.
    * @param loser The list of items that will be returned in the final result, unless an item has
-   *     the same key as an item in {@param winner}, in which case the item from winner will be
-   *     used.
+   *     the same key as an item in winner, in which case the item from winner will be used.
    * @return The combined list of items from the input lists.
    */
   public static ImmutableList<Metadata.Items> mergeMetadataItems(
@@ -297,8 +297,7 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkNotNull(instance);
     String zone = nameFromSelfLink(instance.getZone());
-    if (templateLink.isPresent()) {
-      Preconditions.checkArgument(!templateLink.get().isEmpty());
+    if (templateLink.isPresent() && !templateLink.get().isEmpty()) {
       return compute.insertInstanceWithTemplate(projectId, zone, instance, templateLink.get());
     }
     return compute.insertInstance(projectId, zone, instance);
@@ -541,6 +540,7 @@ public class ComputeClient {
    *
    * @param projectId The ID of the project where the snapshot resides.
    * @param snapshotName Name of the snapshot to be deleted.
+   * @return The {@link Operation} that was performed.
    * @throws IOException If an error occurred in deleting the snapshot.
    */
   public Operation deleteSnapshotAsync(final String projectId, final String snapshotName)
@@ -628,6 +628,7 @@ public class ComputeClient {
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
+   * @throws OperationException If there was an error performing the operation.
    */
   public Operation waitForOperationCompletion(
       final String projectId, final Operation operation, final long timeout)
@@ -646,13 +647,14 @@ public class ComputeClient {
    * @param timeout The number of milliseconds to wait for the {@link Operation} to complete.
    * @return The final state for the completed {@link Operation}.
    * @throws InterruptedException If the operation was not completed before the timeout.
+   * @throws OperationException If there was an error performing the operation.
    */
   public Operation waitForOperationCompletion(
       final String projectId, final String operationName, final String zoneLink, final long timeout)
       throws InterruptedException, OperationException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
-    Preconditions.checkArgument(Strings.isNullOrEmpty(operationName));
-    Preconditions.checkArgument(Strings.isNullOrEmpty(zoneLink));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(operationName));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(timeout > 0);
 
     // Used to hold the Operation.Error which comes from polling the Operation in lambda expression.
@@ -682,6 +684,25 @@ public class ComputeClient {
       throw new OperationException(operation.getError());
     }
     return operation;
+  }
+
+  /**
+   * Simulate maintenance event on the {@link Instance}, with the given ID on the project requiring
+   * either live migration or termination.
+   *
+   * @param projectId The ID of the project where the instance resides.
+   * @param zoneLink The self link of the zone where the instance resides
+   * @param instanceId The ID of the instance to simulate maintenance on.
+   * @return The {@link SimulateMaintenanceEvent} triggered by this call.
+   * @throws IOException If there was an error in referencing the instance or performing the
+   *     simulated maintenance event
+   */
+  public SimulateMaintenanceEvent simulateMaintenanceEvent(
+      final String projectId, final String zoneLink, final String instanceId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    return compute.simulateMaintenanceEvent(projectId, nameFromSelfLink(zoneLink), instanceId);
   }
 
   private boolean isOperationDone(final Operation operation) {

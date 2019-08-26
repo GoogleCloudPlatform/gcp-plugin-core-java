@@ -32,13 +32,13 @@ public class ClientUtil {
    * to the provided comparator.
    *
    * @param items A list of GCP resources produced by a GCP client library request.
-   * @param filter A predicate applied to objects in {@param items}. If true for a given object,
-   *     then that object will be kept in the final result.
-   * @param comparator Defines a comparison between any two objects in {@param items} used for
-   *     sorting the result.
+   * @param filter A predicate applied to objects in items. If true for a given object, then that
+   *     object will be kept in the final result.
+   * @param comparator Defines a comparison between any two objects in items used for sorting the
+   *     result.
    * @param <T> The type of the list elements.
-   * @return An {@link ImmutableList} which is empty if {@param items} is null or empty, and
-   *     otherwise is {@param items} filtered and sorted as described above.
+   * @return An {@link ImmutableList} which is empty if items is null or empty, and otherwise is
+   *     items filtered and sorted as described above.
    */
   public static <T> ImmutableList<T> processResourceList(
       final List<T> items, final Predicate<T> filter, final Comparator<T> comparator) {
@@ -53,11 +53,11 @@ public class ClientUtil {
    * Given a list of GCP resources, sorts according to the provided comparator.
    *
    * @param items A list of GCP resources produced by a GCP client library request.
-   * @param comparator Defines a comparison between any two objects in {@param items} used for
-   *     sorting the result.
+   * @param comparator Defines a comparison between any two objects in items used for sorting the
+   *     result.
    * @param <T> The type of the list elements.
-   * @return An {@link ImmutableList} which is empty if {@param items} is null or empty, and
-   *     otherwise is {@param items} filtered and sorted as described above.
+   * @return An {@link ImmutableList} which is empty if items is null or empty, and otherwise is
+   *     items filtered and sorted as described above.
    */
   public static <T> ImmutableList<T> processResourceList(
       final List<T> items, final Comparator<T> comparator) {
@@ -81,7 +81,7 @@ public class ClientUtil {
    *
    * @param labels A map of key:value GCP labels.
    * @return A filter string that is a concatenation of strings of the form "(labels.key eq value) "
-   *     using the keys and values from {@param labels}.
+   *     using the keys and values from labels.
    */
   public static String buildLabelsFilterString(final Map<String, String> labels) {
     StringBuilder sb = new StringBuilder();

@@ -17,6 +17,7 @@
 package com.google.graphite.platforms.plugin.client;
 
 import com.google.api.services.compute.Compute;
+import com.google.api.services.compute.Compute.Instances.SimulateMaintenanceEvent;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DiskType;
 import com.google.api.services.compute.model.Image;
@@ -149,5 +150,10 @@ class ComputeWrapper {
 
   Operation getZoneOperation(String projectId, String zone, String operationId) throws IOException {
     return compute.zoneOperations().get(projectId, zone, operationId).execute();
+  }
+
+  SimulateMaintenanceEvent simulateMaintenanceEvent(
+      final String projectId, final String zone, final String instanceId) throws IOException {
+    return compute.instances().simulateMaintenanceEvent(projectId, zone, instanceId);
   }
 }

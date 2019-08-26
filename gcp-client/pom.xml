@@ -18,21 +18,23 @@
   <parent>
     <groupId>com.google.graphite</groupId>
     <artifactId>gcp-plugin-core-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>gcp-client</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
   <name>GCP Plugin Clients</name>
   <description>These classes provide shared GCP client functionality.</description>
 
   <properties>
-    <container.revision>57</container.revision>
-    <compute.revision>214</compute.revision>
-    <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
+    <container.revision>20190628</container.revision>
+    <compute.revision>20190624</compute.revision>
+    <cloudresourcemanager.revision>20190807</cloudresourcemanager.revision>
     <durian.version>3.4.0</durian.version>
     <awaitility.version>3.1.6</awaitility.version>
+    <fmt-maven.skip>false</fmt-maven.skip>
   </properties>
 
   <dependencies>
