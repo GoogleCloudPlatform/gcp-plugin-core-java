@@ -29,7 +29,7 @@ You can use these libraries by including the following in your pom.xml:
   <dependency>
     <groupId>com.google.graphite</groupId>
     <artifactId>gcp-plugin-core-java</artifactId>
-    <version>1.0</version>
+    <version>0.1.0</version>
   </dependency>
   ...
 </dependencies>
