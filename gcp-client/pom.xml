@@ -29,9 +29,9 @@
   <description>These classes provide shared GCP client functionality.</description>
 
   <properties>
-    <container.revision>20190628</container.revision>
-    <compute.revision>20190624</compute.revision>
-    <cloudresourcemanager.revision>20190807</cloudresourcemanager.revision>
+    <container.revision>74</container.revision>
+    <compute.revision>213</compute.revision>
+    <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
     <durian.version>3.4.0</durian.version>
     <awaitility.version>3.1.6</awaitility.version>
     <fmt-maven.skip>false</fmt-maven.skip>

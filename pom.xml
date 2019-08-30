@@ -74,10 +74,10 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <google.api.version>1.29.2</google.api.version>
+    <google.api.version>1.24.1</google.api.version>
     <mockito.version>2.10.0</mockito.version>
     <junit.version>4.12</junit.version>
-    <google.guava.version>19.0</google.guava.version>
+    <google.guava.version>14.0.1</google.guava.version>
     <maven-compiler.version>3.8.0</maven-compiler.version>
     <xml-format-maven.version>3.0.7</xml-format-maven.version>
     <tidy-maven.version>1.1.0</tidy-maven.version>
