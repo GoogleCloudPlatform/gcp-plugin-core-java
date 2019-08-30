@@ -16,7 +16,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.google.graphite</groupId>
+    <groupId>com.google.cloud.graphite</groupId>
     <artifactId>gcp-plugin-core-java</artifactId>
     <version>0.1.1-SNAPSHOT</version>
   </parent>

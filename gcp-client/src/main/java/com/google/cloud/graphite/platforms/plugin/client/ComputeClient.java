@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.buildLabelsFilterString;
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.buildLabelsFilterString;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.diffplug.common.base.Errors;
 import com.google.api.services.compute.Compute.Instances.SimulateMaintenanceEvent;

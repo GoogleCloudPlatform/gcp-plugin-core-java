@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client.util;
+package com.google.cloud.graphite.platforms.plugin.client.util;
 
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

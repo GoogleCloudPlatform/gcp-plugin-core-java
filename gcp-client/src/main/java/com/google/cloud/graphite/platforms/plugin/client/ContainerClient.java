@@ -12,9 +12,9 @@
  * the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
-import static com.google.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;

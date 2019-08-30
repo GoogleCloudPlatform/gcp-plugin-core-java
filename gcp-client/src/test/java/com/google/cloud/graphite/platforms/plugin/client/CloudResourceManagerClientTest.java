@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link CloudResourceManagerClient}. */
+/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.CloudResourceManagerClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class CloudResourceManagerClientTest {
   private static final List<String> TEST_PROJECT_IDS_SORTED =
