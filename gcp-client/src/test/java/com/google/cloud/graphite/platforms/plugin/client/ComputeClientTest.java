@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,7 +37,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link ComputeClient}. */
+/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ComputeClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";

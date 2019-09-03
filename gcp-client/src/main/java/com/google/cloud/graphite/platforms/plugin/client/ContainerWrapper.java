@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;

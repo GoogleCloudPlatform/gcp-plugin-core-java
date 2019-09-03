@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client.util;
+package com.google.cloud.graphite.platforms.plugin.client.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

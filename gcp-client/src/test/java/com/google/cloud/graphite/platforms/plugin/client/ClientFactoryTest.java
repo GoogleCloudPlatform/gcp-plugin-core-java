@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link ClientFactory}. */
+/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ClientFactory}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ClientFactoryTest {
   @Test

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.google.graphite.platforms.plugin.client;
+package com.google.cloud.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link ContainerClient}. */
+/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ContainerClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ContainerClientTest {
   private static final String TEST_PROJECT_ID = "test-project-id";
