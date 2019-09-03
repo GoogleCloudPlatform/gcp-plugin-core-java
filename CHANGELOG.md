@@ -29,6 +29,18 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  
  ### Fixed
  
+ ## [0.1.1] - 2019-09-03
+ 
+ ### Changed
+  - Issue #3: Group ID changed from com.google.graphite to com.google.cloud.graphite
+  - com.google.http-client:google-http-client version changed: 1.29.2 to 1.24.1
+  - com.google.api-client:api-client version changed: 1.29.2 to 1.24.1
+  - com.google.guava:guava version changed: 19.0 to 14.0.1
+  - com.google.api-services versions:
+     - google-api-services-compute changed: v1-rev20190624-1.29.2 to v1-rev213-1.24.1
+     - google-api-services-container changed: v1-rev20190628-1.29.2 to v1-rev74-1.24.1
+     - google-api-services-cloudresourcemanager changed: v1-rev20190807-1.29.2 to v1-rev547-1.24.1
+ 
  ## [0.1.0] - 2019-08-26
  
  ### Added
