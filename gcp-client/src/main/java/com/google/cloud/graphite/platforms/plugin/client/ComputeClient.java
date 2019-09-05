@@ -21,7 +21,6 @@ import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.diffplug.common.base.Errors;
-import com.google.api.services.compute.Compute.Instances.SimulateMaintenanceEvent;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
@@ -693,11 +692,11 @@ public class ComputeClient {
    * @param projectId The ID of the project where the instance resides.
    * @param zoneLink The self link of the zone where the instance resides
    * @param instanceId The ID of the instance to simulate maintenance on.
-   * @return The {@link SimulateMaintenanceEvent} triggered by this call.
+   * @return The {@link Operation} triggered by this call.
    * @throws IOException If there was an error in referencing the instance or performing the
    *     simulated maintenance event
    */
-  public SimulateMaintenanceEvent simulateMaintenanceEvent(
+  public Operation simulateMaintenanceEvent(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
