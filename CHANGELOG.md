@@ -28,8 +28,15 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  ### Removed
  
  ### Fixed
+
+## [0.1.2] - 2019-09-05
+
+ ### Fixed
+  - simulateMaintenanceEvent() in ComputeClient was just returning the request object. Now executes
+  and returns the operation to be able to track completion.
+
  
- ## [0.1.1] - 2019-09-03
+## [0.1.1] - 2019-09-03
  
  ### Changed
   - Issue #3: Group ID changed from com.google.graphite to com.google.cloud.graphite
@@ -41,7 +48,7 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
      - google-api-services-container changed: v1-rev20190628-1.29.2 to v1-rev74-1.24.1
      - google-api-services-cloudresourcemanager changed: v1-rev20190807-1.29.2 to v1-rev547-1.24.1
  
- ## [0.1.0] - 2019-08-26
+## [0.1.0] - 2019-08-26
  
  ### Added
   - Module `gcp-client` for the shared convenience libraries for GCP used by the Jenkins plugins.
