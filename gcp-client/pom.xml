@@ -18,11 +18,11 @@
   <parent>
     <groupId>com.google.cloud.graphite</groupId>
     <artifactId>gcp-plugin-core-java</artifactId>
-    <version>0.1.3-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>gcp-client</artifactId>
-  <version>0.1.3-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>GCP Plugin Clients</name>
@@ -30,7 +30,7 @@
 
   <properties>
     <container.revision>74</container.revision>
-    <compute.revision>213</compute.revision>
+    <compute.revision>214</compute.revision>
     <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
     <durian.version>3.4.0</durian.version>
     <awaitility.version>3.1.6</awaitility.version>
@@ -57,6 +57,12 @@
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
       <version>${google.api.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.http-client</groupId>
+          <artifactId>com.google.http-client</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.diffplug.durian</groupId>
