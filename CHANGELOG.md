@@ -29,7 +29,7 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  
  ### Fixed
  
-## [0.2.0] - 2019-10-28
+## [0.2.0] - 2019-10-29
 
  ### Changed
   - com.google.http-client:google-http-client version changed: 1.24.1 to 1.21.0
