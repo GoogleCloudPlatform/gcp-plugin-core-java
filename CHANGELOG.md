@@ -28,6 +28,21 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  ### Removed
  
  ### Fixed
+ 
+## [0.2.0] - 2019-10-29
+
+ ### Changed
+  - com.google.http-client:google-http-client version changed: 1.24.1 to 1.21.0
+  - com.google.http-client:google-http-client-jackson2 version changed: 1.24.1 to 1.25.0
+  - com.google.api-client:api-client version changed: 1.24.1 to 1.25.0
+  - com.google.guava version changed: 14.0.1 to 20.0
+  - com.google.api-services versions:
+     - google-api-services-compute changed: v1-rev213-1.24.1 to v1-rev214-1.25.0
+     - google-api-services-container changed: v1-rev74-1.24.1 to v1-rev74-1.25.0
+     - google-api-services-cloudresourcemanager changed: v1-rev547-1.24.1 to v1-rev547-1.25.0
+ 
+ ### Added
+  - Integrated repository into team CI server.
 
 ## [0.1.2] - 2019-09-05
 
