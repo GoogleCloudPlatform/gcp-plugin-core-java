@@ -17,8 +17,14 @@
 package com.google.cloud.graphite.platforms.plugin.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
 import com.google.api.services.compute.model.InstanceTemplate;
@@ -26,9 +32,15 @@ import com.google.api.services.compute.model.MachineType;
 import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Zone;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeClient.GuestAttribute;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeClient.GuestAttributeQueryResult;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeClient.GuestAttributeQueryValue;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeClient.InstanceResourceData;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +54,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";
   private static final String TEST_TEMPLATE_NAME = "test-template-name";
+  private static final String TEST_INSTANCE_ID = "test-instance";
+  private static final String TEST_ZONE_LINK = "test-zone";
 
   @Mock private ComputeWrapper compute;
   @InjectMocks private ComputeClient computeClient;
@@ -167,5 +181,51 @@ public class ComputeClientTest {
     assertEquals(
         new InstanceTemplate().setName(TEST_TEMPLATE_NAME),
         computeClient.getTemplate(TEST_PROJECT_ID, TEST_TEMPLATE_NAME));
+  }
+
+  @Test
+  public void testGetGuestAttributesSyncReturnsProperly() throws IOException {
+    HttpRequestFactory requestFactory = Mockito.mock(HttpRequestFactory.class);
+    Mockito.when(compute.getRequestFactory()).thenReturn(requestFactory);
+    HttpRequest request = Mockito.mock(HttpRequest.class);
+    Mockito.when(requestFactory.buildGetRequest(any())).thenReturn(request);
+    HttpResponse response = Mockito.mock(HttpResponse.class);
+    Mockito.when(request.execute()).thenReturn(response);
+    GuestAttribute guestAttribute =
+        GuestAttribute.builder()
+            .namespace("test-namespace")
+            .key("test-key")
+            .value("test-value")
+            .build();
+    GuestAttributeQueryResult guestAttributeQueryResult =
+        GuestAttributeQueryResult.builder()
+            .queryValue(
+                GuestAttributeQueryValue.builder()
+                    .items(new ImmutableList.Builder<GuestAttribute>().add(guestAttribute).build())
+                    .build())
+            .build();
+    Mockito.when(response.parseAs(GuestAttributeQueryResult.class))
+        .thenReturn(guestAttributeQueryResult);
+
+    assertEquals(
+        ImmutableList.of(guestAttribute),
+        computeClient.getGuestAttributesSync(TEST_PROJECT_ID, TEST_ZONE_LINK, TEST_INSTANCE_ID));
+  }
+
+  @Test
+  public void testParseResourceDataParsesSelfLink() {
+    Optional<InstanceResourceData> result =
+        ComputeClient.parseInstanceResourceData(
+            "https://www.googleapis.com/compute/v1/projects/test-project-1/zones/test-zone-1/instances/test-name");
+    assertTrue(result.isPresent());
+    assertEquals("test-project-1", result.get().getProjectId());
+    assertEquals("test-zone-1", result.get().getZone());
+    assertEquals("test-name", result.get().getName());
+  }
+
+  @Test
+  public void testParseResourceDataReturnsEmptyWithInvalidInput() {
+    Optional<InstanceResourceData> result = ComputeClient.parseInstanceResourceData("fizz-buzz");
+    assertFalse(result.isPresent());
   }
 }

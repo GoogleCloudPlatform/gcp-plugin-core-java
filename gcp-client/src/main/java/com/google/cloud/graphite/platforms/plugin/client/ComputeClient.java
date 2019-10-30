@@ -21,6 +21,10 @@ import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.diffplug.common.base.Errors;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpResponse;
+import com.google.api.client.util.Key;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DeprecationStatus;
 import com.google.api.services.compute.model.DiskType;
@@ -36,10 +40,12 @@ import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Snapshot;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -48,6 +54,12 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 
@@ -59,6 +71,11 @@ import org.awaitility.core.ConditionTimeoutException;
 public class ComputeClient {
   private static final Logger LOGGER = Logger.getLogger(ComputeClient.class.getName());
   private static final long POLLING_INTERVAL = 5 * 1000;
+  private static final String GET_GUEST_ATTRIBUTES_URL =
+      "https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s/getGuestAttributes?queryPath=&alt=json";
+  private static final Pattern INSTANCE_RESOURCE_DATA_PATTERN =
+      Pattern.compile(
+          "https:\\/\\/www.googleapis.com\\/compute\\/v1\\/projects\\/([0-9a-zA-Z\\-]+)\\/zones\\/([a-z0-9\\-]+)\\/instances\\/([0-9a-zA-Z\\-]+)");
 
   private final ComputeWrapper compute;
 
@@ -694,7 +711,7 @@ public class ComputeClient {
    * @param instanceId The ID of the instance to simulate maintenance on.
    * @return The {@link Operation} triggered by this call.
    * @throws IOException If there was an error in referencing the instance or performing the
-   *     simulated maintenance event
+   *     simulated maintenance event.
    */
   public Operation simulateMaintenanceEvent(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
@@ -702,6 +719,67 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     return compute.simulateMaintenanceEvent(projectId, nameFromSelfLink(zoneLink), instanceId);
+  }
+
+  /**
+   * Retrieves the guest attributes for the specified instance.
+   *
+   * @param projectId The ID of the project where the instance resides.
+   * @param zoneLink The seld link of the zone where the instance resides.
+   * @param instanceId The ID of the instance.
+   * @return A map containing the instance's guest attributes. Structure:
+   *     [Namespace->[AttrKey->AttrValue]].
+   * @throws IOException If there was an error retrieving the guest attributes.
+   */
+  public ImmutableList<GuestAttribute> getGuestAttributesSync(
+      final String projectId, final String zoneLink, final String instanceId) throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+
+    String url =
+        String.format(
+            GET_GUEST_ATTRIBUTES_URL,
+            URLEncoder.encode(projectId, "UTF-8"),
+            URLEncoder.encode(zoneLink, "UTF-8"),
+            URLEncoder.encode(instanceId, "UTF-8"));
+    HttpRequest request = compute.getRequestFactory().buildGetRequest(new GenericUrl(url));
+    HttpResponse response = request.execute();
+    GuestAttributeQueryResult queryResult = response.parseAs(GuestAttributeQueryResult.class);
+    GuestAttributeQueryValue queryValue = queryResult.getQueryValue();
+    if (queryValue == null) {
+      throw new IOException("Response did not contain 'queryValue'");
+    }
+
+    List<GuestAttribute> items = queryValue.getItems();
+    if (items == null) {
+      throw new IOException("Response 'queryValue' does not contain items");
+    }
+
+    ImmutableList.Builder<GuestAttribute> resultBuilder = ImmutableList.builder();
+    items.forEach(resultBuilder::add);
+    return resultBuilder.build();
+  }
+
+  /**
+   * Parses instance resource data from the specified self link URL.
+   *
+   * @param selfLink The self link URL to be parsed.
+   * @return If successful, an {@link Optional} containing a {@link InstanceResourceData} struct
+   *     containing the parsed data. Otherwise, an empty {@link Optional}.
+   */
+  public static Optional<InstanceResourceData> parseInstanceResourceData(String selfLink) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(selfLink));
+    Matcher matcher = INSTANCE_RESOURCE_DATA_PATTERN.matcher(selfLink);
+    if (!matcher.find()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        InstanceResourceData.builder()
+            .projectId(matcher.group(1))
+            .zone(matcher.group(2))
+            .name(matcher.group(3))
+            .build());
   }
 
   private boolean isOperationDone(final Operation operation) {
@@ -748,5 +826,52 @@ public class ComputeClient {
     public Operation.Error getError() {
       return error;
     }
+  }
+
+  @VisibleForTesting
+  @Getter
+  @Setter
+  @Builder
+  static class GuestAttributeQueryResult {
+    @Key("queryPath")
+    private String queryPath;
+
+    @Key("queryValue")
+    private GuestAttributeQueryValue queryValue;
+  }
+
+  @VisibleForTesting
+  @Getter
+  @Setter
+  @Builder
+  static class GuestAttributeQueryValue {
+    @Key("items")
+    private List<GuestAttribute> items;
+  }
+
+  /** Contains guest attribute data for instances. */
+  @Getter
+  @Setter
+  @Builder
+  @EqualsAndHashCode
+  public static class GuestAttribute {
+    @Key("namespace")
+    private String namespace;
+
+    @Key("key")
+    private String key;
+
+    @Key("value")
+    private String value;
+  }
+
+  /** Contains resource data for instances. */
+  @Getter
+  @Setter
+  @Builder
+  public static class InstanceResourceData {
+    private String projectId;
+    private String zone;
+    private String name;
   }
 }

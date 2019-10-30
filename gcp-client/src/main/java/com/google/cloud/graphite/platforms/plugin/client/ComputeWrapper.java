@@ -16,6 +16,7 @@
 
 package com.google.cloud.graphite.platforms.plugin.client;
 
+import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DiskType;
@@ -154,5 +155,9 @@ class ComputeWrapper {
   Operation simulateMaintenanceEvent(
       final String projectId, final String zone, final String instanceId) throws IOException {
     return compute.instances().simulateMaintenanceEvent(projectId, zone, instanceId).execute();
+  }
+
+  HttpRequestFactory getRequestFactory() {
+    return compute.getRequestFactory();
   }
 }
