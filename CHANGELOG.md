@@ -28,6 +28,14 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  ### Removed
  
  ### Fixed
+
+## [0.2.1] - 2019-11-06
+
+ ### Added
+  - Public model objects: GuestAttribute and InstanceResourceData
+  - API method in Compute client: getGuestAttributes
+  - Client utility method: parseInstanceResourceData
+  - Dependency org.projectlombok:lombok 1.18.6
  
 ## [0.2.0] - 2019-10-29
 
