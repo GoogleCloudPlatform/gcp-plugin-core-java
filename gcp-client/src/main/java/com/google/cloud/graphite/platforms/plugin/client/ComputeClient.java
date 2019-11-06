@@ -36,6 +36,9 @@ import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Snapshot;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeWrapper.GuestAttributeQueryResult;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeWrapper.GuestAttributeQueryValue;
+import com.google.cloud.graphite.platforms.plugin.client.model.GuestAttribute;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -694,7 +697,7 @@ public class ComputeClient {
    * @param instanceId The ID of the instance to simulate maintenance on.
    * @return The {@link Operation} triggered by this call.
    * @throws IOException If there was an error in referencing the instance or performing the
-   *     simulated maintenance event
+   *     simulated maintenance event.
    */
   public Operation simulateMaintenanceEvent(
       final String projectId, final String zoneLink, final String instanceId) throws IOException {
@@ -702,6 +705,46 @@ public class ComputeClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneLink));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
     return compute.simulateMaintenanceEvent(projectId, nameFromSelfLink(zoneLink), instanceId);
+  }
+
+  /**
+   * Retrieves the guest attributes for the specified instance.
+   *
+   * @param projectId The ID of the project where the instance resides.
+   * @param zoneName The name of the zone where the instance resides.
+   * @param instanceId The ID of the instance.
+   * @param queryPath A path for filtering the guest attributes, encoded for use in a URL. e.g.
+   *     "hostkeys/" -> "hostkeys%2F"
+   * @return A map containing the instance's guest attributes. Structure:
+   *     [Namespace->[AttrKey->AttrValue]].
+   * @throws IOException If there was an error retrieving the guest attributes.
+   */
+  public ImmutableList<GuestAttribute> getGuestAttributesSync(
+      final String projectId,
+      final String zoneName,
+      final String instanceId,
+      final String queryPath)
+      throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(zoneName));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(instanceId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(queryPath));
+
+    GuestAttributeQueryResult queryResult =
+        compute.getGuestAttributes(projectId, zoneName, instanceId, queryPath);
+    GuestAttributeQueryValue queryValue = queryResult.getQueryValue();
+    if (queryValue == null) {
+      throw new IOException("Response did not contain 'queryValue'");
+    }
+
+    List<GuestAttribute> items = queryValue.getItems();
+    if (items == null) {
+      throw new IOException("Response 'queryValue' does not contain items");
+    }
+
+    ImmutableList.Builder<GuestAttribute> resultBuilder = ImmutableList.builder();
+    items.forEach(resultBuilder::add);
+    return resultBuilder.build();
   }
 
   private boolean isOperationDone(final Operation operation) {

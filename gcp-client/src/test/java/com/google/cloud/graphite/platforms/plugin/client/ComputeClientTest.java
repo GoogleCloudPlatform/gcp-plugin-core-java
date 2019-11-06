@@ -26,6 +26,10 @@ import com.google.api.services.compute.model.MachineType;
 import com.google.api.services.compute.model.Metadata;
 import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Zone;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeWrapper.GuestAttributeQueryResult;
+import com.google.cloud.graphite.platforms.plugin.client.ComputeWrapper.GuestAttributeQueryValue;
+import com.google.cloud.graphite.platforms.plugin.client.model.GuestAttribute;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +46,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";
   private static final String TEST_TEMPLATE_NAME = "test-template-name";
+  private static final String TEST_INSTANCE_ID = "test-instance";
+  private static final String TEST_ZONE_LINK = "test-zone";
 
   @Mock private ComputeWrapper compute;
   @InjectMocks private ComputeClient computeClient;
@@ -167,5 +173,31 @@ public class ComputeClientTest {
     assertEquals(
         new InstanceTemplate().setName(TEST_TEMPLATE_NAME),
         computeClient.getTemplate(TEST_PROJECT_ID, TEST_TEMPLATE_NAME));
+  }
+
+  @Test
+  public void testGetGuestAttributesSyncReturnsProperly() throws IOException {
+    GuestAttribute guestAttribute =
+        GuestAttribute.builder()
+            .namespace("test-namespace")
+            .key("test-key")
+            .value("test-value")
+            .build();
+    GuestAttributeQueryResult guestAttributeQueryResult =
+        GuestAttributeQueryResult.builder()
+            .queryValue(
+                GuestAttributeQueryValue.builder()
+                    .items(new ImmutableList.Builder<GuestAttribute>().add(guestAttribute).build())
+                    .build())
+            .build();
+    Mockito.when(
+            compute.getGuestAttributes(
+                TEST_PROJECT_ID, TEST_ZONE_LINK, TEST_INSTANCE_ID, "test-namespace%2F"))
+        .thenReturn(guestAttributeQueryResult);
+
+    assertEquals(
+        ImmutableList.of(guestAttribute),
+        computeClient.getGuestAttributesSync(
+            TEST_PROJECT_ID, TEST_ZONE_LINK, TEST_INSTANCE_ID, "test-namespace%2F"));
   }
 }
