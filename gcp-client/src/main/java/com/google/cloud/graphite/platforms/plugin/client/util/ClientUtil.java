@@ -16,17 +16,25 @@
 
 package com.google.cloud.graphite.platforms.plugin.client.util;
 
+import com.google.cloud.graphite.platforms.plugin.client.model.InstanceResourceData;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /** A library of utility functions for common interactions with the GCP client libraries. */
 public class ClientUtil {
+  private static final Pattern INSTANCE_RESOURCE_DATA_PATTERN =
+      Pattern.compile(
+          "https:\\/\\/www.googleapis.com\\/compute\\/v1\\/projects\\/([0-9a-zA-Z\\-]+)\\/zones\\/([a-z0-9\\-]+)\\/instances\\/([0-9a-zA-Z\\-]+)");
+
   /**
    * Given a list of GCP resources, filters the list using the provided filter and sorts according
    * to the provided comparator.
@@ -89,5 +97,26 @@ public class ClientUtil {
       sb.append("(labels.").append(l.getKey()).append(" eq ").append(l.getValue()).append(") ");
     }
     return sb.toString().trim();
+  }
+
+  /**
+   * Parses instance resource data from the specified self link URL.
+   *
+   * @param selfLink The self link URL to be parsed.
+   * @return If successful, an {@link Optional} containing a {@link InstanceResourceData} struct
+   *     containing the parsed data. Otherwise, an empty {@link Optional}.
+   */
+  public static Optional<InstanceResourceData> parseInstanceResourceData(final String selfLink) {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(selfLink));
+    Matcher matcher = INSTANCE_RESOURCE_DATA_PATTERN.matcher(selfLink);
+    if (!matcher.find()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        InstanceResourceData.builder()
+            .projectId(matcher.group(1))
+            .zone(matcher.group(2))
+            .name(matcher.group(3))
+            .build());
   }
 }

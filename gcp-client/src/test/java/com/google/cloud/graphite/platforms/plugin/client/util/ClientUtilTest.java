@@ -19,15 +19,18 @@ package com.google.cloud.graphite.platforms.plugin.client.util;
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.google.api.services.compute.model.Zone;
+import com.google.cloud.graphite.platforms.plugin.client.model.InstanceResourceData;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 
 /** Tests {@link ClientUtil}. */
@@ -101,5 +104,22 @@ public class ClientUtilTest {
 
     String got = ClientUtil.buildLabelsFilterString(labels);
     assertEquals(expect, got);
+  }
+
+  @Test
+  public void testParseResourceDataParsesSelfLink() {
+    Optional<InstanceResourceData> result =
+        ClientUtil.parseInstanceResourceData(
+            "https://www.googleapis.com/compute/v1/projects/test-project-1/zones/test-zone-1/instances/test-name");
+    assertTrue(result.isPresent());
+    assertEquals("test-project-1", result.get().getProjectId());
+    assertEquals("test-zone-1", result.get().getZone());
+    assertEquals("test-name", result.get().getName());
+  }
+
+  @Test
+  public void testParseResourceDataReturnsEmptyWithInvalidInput() {
+    Optional<InstanceResourceData> result = ClientUtil.parseInstanceResourceData("fizz-buzz");
+    assertFalse(result.isPresent());
   }
 }

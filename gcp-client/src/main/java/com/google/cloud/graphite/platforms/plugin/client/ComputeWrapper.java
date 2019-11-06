@@ -16,7 +16,10 @@
 
 package com.google.cloud.graphite.platforms.plugin.client;
 
-import com.google.api.client.http.HttpRequestFactory;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.json.JsonObjectParser;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.Key;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.compute.model.AcceleratorType;
 import com.google.api.services.compute.model.DiskType;
@@ -32,15 +35,24 @@ import com.google.api.services.compute.model.Region;
 import com.google.api.services.compute.model.Snapshot;
 import com.google.api.services.compute.model.Subnetwork;
 import com.google.api.services.compute.model.Zone;
+import com.google.cloud.graphite.platforms.plugin.client.model.GuestAttribute;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /*
  * Internal use only. Wraps chained methods with direct calls for readability and mocking. The lack
  * of final parameters or parameter checking is intended, this is purely for wrapping.
  */
 class ComputeWrapper {
+  private static final String GET_GUEST_ATTRIBUTES_URL =
+      "https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s/getGuestAttributes?queryPath=%s";
+
   private final Compute compute;
 
   ComputeWrapper(Compute compute) {
@@ -152,12 +164,43 @@ class ComputeWrapper {
     return compute.zoneOperations().get(projectId, zone, operationId).execute();
   }
 
-  Operation simulateMaintenanceEvent(
-      final String projectId, final String zone, final String instanceId) throws IOException {
+  Operation simulateMaintenanceEvent(String projectId, String zone, String instanceId)
+      throws IOException {
     return compute.instances().simulateMaintenanceEvent(projectId, zone, instanceId).execute();
   }
 
-  HttpRequestFactory getRequestFactory() {
-    return compute.getRequestFactory();
+  GuestAttributeQueryResult getGuestAttributes(
+      String projectId, String zone, String instanceId, String queryPath) throws IOException {
+    return compute
+        .getRequestFactory()
+        .buildGetRequest(
+            new GenericUrl(
+                String.format(GET_GUEST_ATTRIBUTES_URL, projectId, zone, instanceId, queryPath)))
+        .setParser(new JsonObjectParser(new JacksonFactory()))
+        .execute()
+        .parseAs(GuestAttributeQueryResult.class);
+  }
+
+  @Getter
+  @Setter
+  @Builder
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class GuestAttributeQueryResult {
+    @Key("queryPath")
+    private String queryPath;
+
+    @Key("queryValue")
+    private GuestAttributeQueryValue queryValue;
+  }
+
+  @Getter
+  @Setter
+  @Builder
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class GuestAttributeQueryValue {
+    @Key("items")
+    private List<GuestAttribute> items;
   }
 }
