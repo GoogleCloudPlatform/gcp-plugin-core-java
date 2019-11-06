@@ -714,9 +714,9 @@ public class ComputeClient {
    * @param zoneName The name of the zone where the instance resides.
    * @param instanceId The ID of the instance.
    * @param queryPath A path for filtering the guest attributes, encoded for use in a URL. e.g.
-   *     "hostkeys/" -> "hostkeys%2F"
+   *     "hostkeys/" -&gt; "hostkeys%2F"
    * @return A map containing the instance's guest attributes. Structure:
-   *     [Namespace->[AttrKey->AttrValue]].
+   *     [Namespace-&gt;[AttrKey-&gt;AttrValue]].
    * @throws IOException If there was an error retrieving the guest attributes.
    */
   public ImmutableList<GuestAttribute> getGuestAttributesSync(
