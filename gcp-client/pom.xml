@@ -32,6 +32,9 @@
     <container.revision>74</container.revision>
     <compute.revision>214</compute.revision>
     <cloudresourcemanager.revision>547</cloudresourcemanager.revision>
+    <containeranalysis.revision>19</containeranalysis.revision>
+    <binaryauthorization.revision>38</binaryauthorization.revision>
+    <cloudkms.revision>89</cloudkms.revision>
     <durian.version>3.4.0</durian.version>
     <awaitility.version>3.1.6</awaitility.version>
     <fmt-maven.skip>false</fmt-maven.skip>
@@ -58,6 +61,21 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudresourcemanager</artifactId>
       <version>v1-rev${cloudresourcemanager.revision}-${google.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-containeranalysis</artifactId>
+      <version>v1beta1-rev${containeranalysis.revision}-${google.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-binaryauthorization</artifactId>
+      <version>v1beta1-rev${binaryauthorization.revision}-${google.api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-cloudkms</artifactId>
+      <version>v1-rev${cloudkms.revision}-${google.api.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.api-client</groupId>

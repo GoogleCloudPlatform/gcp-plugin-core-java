@@ -36,5 +36,8 @@ public class ClientFactoryTest {
     assertNotNull(cf.containerClient());
     assertNotNull(cf.cloudResourceManagerClient());
     assertNotNull(cf.computeClient());
+    assertNotNull(cf.binaryAuthorizationClient());
+    assertNotNull(cf.cloudKMSClient());
+    assertNotNull(cf.containerAnalysisClient());
   }
 }

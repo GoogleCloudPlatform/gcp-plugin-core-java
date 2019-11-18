@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,6 +96,19 @@ public class ClientUtil {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, String> l : labels.entrySet()) {
       sb.append("(labels.").append(l.getKey()).append(" eq ").append(l.getValue()).append(") ");
+    }
+    return sb.toString().trim();
+  }
+
+  public static String buildFilterString(final Map<String, String> filters) {
+    StringBuilder sb = new StringBuilder();
+    Iterator<Map.Entry<String, String>> it = filters.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<String, String> f = it.next();
+      sb.append(f.getKey()).append("=\"").append(f.getValue()).append("\" ");
+      if (it.hasNext()) {
+        sb.append("AND ");
+      }
     }
     return sb.toString().trim();
   }
