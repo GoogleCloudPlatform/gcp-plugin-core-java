@@ -1,7 +1,24 @@
+/*
+ * Copyright 2019 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.google.cloud.graphite.platforms.plugin.client;
 
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.buildFilterString;
 import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.nameFromSelfLink;
+import static com.google.cloud.graphite.platforms.plugin.client.util.ClientUtil.processResourceList;
 
 import com.google.api.services.containeranalysis.v1beta1.model.Occurrence;
 import com.google.common.base.Preconditions;
@@ -9,6 +26,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +57,7 @@ public class ContainerAnalysisClient {
    * Wait until the vulnerability scan of the provided container image is complete and return the
    * final status.
    *
-   * @param projectId The project ID where the container image is hosted.
+   * @param projectId The ID of the project where the container image is hosted.
    * @param resourceUrl The complete URL of the image in this form:
    *     https://[HOST_NAME]/[PROJECT_ID]/[IMAGE_ID]@sha256:[HASH]
    * @param timeoutMillis The number of milliseconds to wait for the scan before timing out.
@@ -73,21 +91,22 @@ public class ContainerAnalysisClient {
   /**
    * Return a list of occurrences related to a vulnerability on the provided image.
    *
-   * @param projectId The project ID where the container image is hosted.
+   * @param projectId The ID of the project where the container image is hosted.
    * @param resourceUrl The complete URL of the image in this form:
    *     https://[HOST_NAME]/[PROJECT_ID]/[IMAGE_ID]@sha256:[HASH]
-   * @return A list of {@link Occurrence}s of vulnerabilities on the image.
-   * @throws IOException If there was a problem retrieving the list of occurrences.
+   * @return A list of {@link Occurrence}s of vulnerabilities on the image, sorted by name.
+   * @throws IOException An error occurred attempting to get the list of occurrences.
    */
   public ImmutableList<Occurrence> listVulnerabilityScanOccurrences(
       final String projectId, final String resourceUrl) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(resourceUrl));
-    return ImmutableList.copyOf(
+    return processResourceList(
         containerAnalysis.listOccurrences(
             projectId,
             buildFilterString(
-                ImmutableMap.of("resourceUrl", resourceUrl, "kind", VULNERABILITY_KIND))));
+                ImmutableMap.of("resourceUrl", resourceUrl, "kind", VULNERABILITY_KIND))),
+        Comparator.comparing(Occurrence::getName));
   }
 
   /**
@@ -100,8 +119,8 @@ public class ContainerAnalysisClient {
    * @param publicKeyId The id of the public key for the asymmetric PIKIX key used to sign the
    *     payload and produce the signature.
    * @param payload The base64-encoded attestation verified by the provided signature.
-   * @return
-   * @throws IOException
+   * @return The attestation {@link Occurrence} that was created.
+   * @throws IOException An error occurred attempting to get the occurrence.
    */
   public Occurrence createAttestation(
       final String projectId,
