@@ -47,6 +47,7 @@ public class ContainerAnalysisClient {
   private static final String VULNERABILITY_KIND = "VULNERABILITY";
   private static final List<String> FINISHED_STATUSES =
       ImmutableList.of("FINISHED_SUCCESS", "FINISHED_FAILED", "FINISHED_UNSUPPORTED");
+  private static final long POLL_INTERVAL_MS = 1000;
   private ContainerAnalysisWrapper containerAnalysis;
 
   ContainerAnalysisClient(ContainerAnalysisWrapper containerAnalysis) {
@@ -73,17 +74,24 @@ public class ContainerAnalysisClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(resourceUrl));
     Preconditions.checkArgument(timeoutMillis >= 0);
     long start = System.currentTimeMillis();
-    Occurrence statusOccurence =
+    Occurrence statusOccurrence =
         Awaitility.await()
+            .pollDelay(POLL_INTERVAL_MS, TimeUnit.MILLISECONDS)
+            .pollInterval(POLL_INTERVAL_MS, TimeUnit.MILLISECONDS)
             .timeout(timeoutMillis, TimeUnit.MILLISECONDS)
             .until(() -> getStatusOccurrence(projectId, resourceUrl), Optional::isPresent)
             .get();
     long timeLeft = timeoutMillis - (System.currentTimeMillis() - start);
+    if (timeLeft <= 0) {
+      throw new ConditionTimeoutException("Timed out waiting for vulnerability scan to finish.");
+    }
     return Awaitility.await()
+        .pollDelay(POLL_INTERVAL_MS, TimeUnit.MILLISECONDS)
+        .pollInterval(POLL_INTERVAL_MS, TimeUnit.MILLISECONDS)
         .timeout(timeLeft, TimeUnit.MILLISECONDS)
         .until(
             () ->
-                getVulnerabilityScanStatus(projectId, nameFromSelfLink(statusOccurence.getName())),
+                getVulnerabilityScanStatus(projectId, nameFromSelfLink(statusOccurrence.getName())),
             Optional::isPresent)
         .get();
   }
@@ -110,6 +118,33 @@ public class ContainerAnalysisClient {
   }
 
   /**
+   * Given a signed attestation, creates a corresponding {@link Occurrence} for the specified image.
+   * See the below example for usage:
+   *
+   * <pre>{@code
+   * // Clients required
+   * CloudKMSClient ckClient;
+   * ContainerAnalysisClient caClient;
+   * BinaryAuthorizationClient baClient;
+   *
+   * // Strings specific to CloudKMS
+   * String keyProjectId, location, keyRing, cryptoKey, cryptoKeyVersion;
+   * // Strings specific to ContainerAnalysis and BinaryAuthorization
+   * String projectId, resourceUrl, String attestorName, noteProjectId, noteId;
+   *
+   * // Generate and sign the attestation.
+   * String payload = baClient.generateAttestationPayload(resourceUrl);
+   * String signature = ckClient
+   *   .asymmetricSign(keyProjectId, location, keyRing, cryptoKey, cryptoKeyVersion, payload);
+   * // Get the public key id for verifying the signature (assuming the attestor only has one key).
+   * Attestor attestor = baClient.getAttestor(noteProjectId, attestorName);
+   * String publicKeyId = attestor.getUserOwnedDrydockNote().getPublicKeys().get(0).getId();
+   * // Create the attestation occurrence
+   * Occurrence occurrence = caClient
+   *     .createAttestation(
+   *         projectId, resourceUrl, noteProjectId, noteId, signature, publicKeyId, payload);
+   * }</pre>
+   *
    * @param projectId The project ID where the container image is hosted.
    * @param resourceUrl The complete URL of the image in this form:
    *     https://[HOST_NAME]/[PROJECT_ID]/[IMAGE_ID]@sha256:[HASH]
@@ -156,7 +191,7 @@ public class ContainerAnalysisClient {
                       "noteId",
                       VULNERABILITY_NOTE_ID)));
     } catch (IOException ioe) {
-      log.info(String.format("Error listing occurrences: %s. Retrying ...", ioe.getMessage()));
+      log.warning(String.format("Error listing occurrences: %s. Retrying ...", ioe.getMessage()));
       return Optional.empty();
     }
     for (Occurrence o : occurrences) {
@@ -173,7 +208,7 @@ public class ContainerAnalysisClient {
     try {
       occurrence = containerAnalysis.getOccurrence(projectId, occurrenceId);
     } catch (IOException ioe) {
-      log.info(
+      log.warning(
           String.format(
               "Error retrieving vulnerability status occurrence projects/%s/occurrences/%s: %s",
               projectId, occurrenceId, ioe.getMessage()));
@@ -183,7 +218,7 @@ public class ContainerAnalysisClient {
     if (FINISHED_STATUSES.contains(status)) {
       return Optional.of(status);
     }
-    log.info(String.format("Vulnerability scan is not finished. Current status is %s.", status));
+    log.fine(String.format("Vulnerability scan is not finished. Current status is %s.", status));
     return Optional.empty();
   }
 }

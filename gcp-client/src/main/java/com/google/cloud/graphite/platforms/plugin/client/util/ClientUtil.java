@@ -105,7 +105,7 @@ public class ClientUtil {
     Iterator<Map.Entry<String, String>> it = filters.entrySet().iterator();
     while (it.hasNext()) {
       Map.Entry<String, String> f = it.next();
-      sb.append(f.getKey()).append("=\"").append(f.getValue()).append("\" ");
+      sb.append(f.getKey()).append(String.format("=\"%s\" ", f.getValue()));
       if (it.hasNext()) {
         sb.append("AND ");
       }

@@ -166,6 +166,53 @@ public class BinaryAuthorizationClientTest {
     binaryAuthorizationClient.listAttestors(TEST_PROJECT_ID);
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void testGenerateAttestationPayloadErrorWithNullResourceUrl() {
+    BinaryAuthorizationWrapper binaryAuthorization = Mockito.mock(BinaryAuthorizationWrapper.class);
+    BinaryAuthorizationClient binaryAuthorizationClient =
+        new BinaryAuthorizationClient(binaryAuthorization);
+    binaryAuthorizationClient.generateAttestationPayload(null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGenerateAttestationPayloadErrorWithEmptyResourceUrl() {
+    BinaryAuthorizationWrapper binaryAuthorization = Mockito.mock(BinaryAuthorizationWrapper.class);
+    BinaryAuthorizationClient binaryAuthorizationClient =
+        new BinaryAuthorizationClient(binaryAuthorization);
+    binaryAuthorizationClient.generateAttestationPayload("");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGenerateAttestationPayloadErrorWithIncompleteResourceUrl() {
+    BinaryAuthorizationWrapper binaryAuthorization = Mockito.mock(BinaryAuthorizationWrapper.class);
+    BinaryAuthorizationClient binaryAuthorizationClient =
+        new BinaryAuthorizationClient(binaryAuthorization);
+    binaryAuthorizationClient.generateAttestationPayload("gcr.io/test-project/test");
+  }
+
+  @Test
+  public void testGenerateAttestationPayloadWithValidResourceUrl() {
+    BinaryAuthorizationWrapper binaryAuthorization = Mockito.mock(BinaryAuthorizationWrapper.class);
+    BinaryAuthorizationClient binaryAuthorizationClient =
+        new BinaryAuthorizationClient(binaryAuthorization);
+    String expected =
+        "{\n"
+            + "  \"critical\": {\n"
+            + "    \"identity\": {\n"
+            + "      \"docker-reference\": \"gcr.io/test-project/test\"\n"
+            + "    },\n"
+            + "    \"image\": {\n"
+            + "      \"docker-manifest-digest\": \"sha256:0123456789abcdef\"\n"
+            + "    },\n"
+            + "    \"type\": \"Google cloud binauthz container signature\"\n"
+            + "  }\n"
+            + "}\n";
+    String actual =
+        binaryAuthorizationClient.generateAttestationPayload(
+            "gcr.io/test-project/test@sha256:0123456789abcdef");
+    assertEquals(expected, actual);
+  }
+
   private static List<Attestor> initAttestorList(List<String> attestorNames) {
     if (attestorNames == null) {
       return null;
