@@ -86,6 +86,7 @@ public class BinaryAuthorizationClient {
   public String generateAttestationPayload(String resourceUrl) {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(resourceUrl) && resourceUrl.contains("@"));
     String[] tokens = resourceUrl.split("@");
-    return String.format(ATTESTATION_PAYLOAD_TEMPLATE, tokens[0], tokens[1]);
+    return String.format(
+        ATTESTATION_PAYLOAD_TEMPLATE, /* image URI */ tokens[0], /* image hash */ tokens[1]);
   }
 }
