@@ -22,6 +22,7 @@ import com.google.api.services.cloudkms.v1.model.CryptoKey;
 import com.google.api.services.cloudkms.v1.model.CryptoKeyVersion;
 import com.google.api.services.cloudkms.v1.model.KeyRing;
 import com.google.api.services.cloudkms.v1.model.Location;
+import com.google.api.services.cloudkms.v1.model.PublicKey;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -92,6 +93,29 @@ public class CloudKMSClient {
   }
 
   /**
+   * Retrieves a {@link CryptoKey} as specified if it exists. Call {@link CryptoKey#getPrimary()} to
+   * get the primary {@link CryptoKeyVersion} for the key instead of using {@link
+   * #getCryptoKeyVersion(String, String, String, String, String)} with a specified version
+   * identifier.
+   *
+   * @param projectId The ID of the project where the key is hosted.
+   * @param location The name of the location where the key is hosted.
+   * @param keyRing The name of the key ring where the key is hosted.
+   * @param cryptoKey The name of the key to get.
+   * @return The {@link CryptoKey} specified.
+   * @throws IOException An error occurred attempting to get the crypto key.
+   */
+  public CryptoKey getCryptoKey(
+      final String projectId, final String location, final String keyRing, final String cryptoKey)
+      throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(location));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(keyRing));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(cryptoKey));
+    return cloudKMS.getCryptoKey(projectId, location, keyRing, cryptoKey);
+  }
+
+  /**
    * Retrieves a list of available {@link CryptoKeyVersion}s for the specified crypto key.
    *
    * @param projectId The ID of the project to check.
@@ -139,6 +163,32 @@ public class CloudKMSClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(cryptoKey));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(cryptoKeyVersion));
     return cloudKMS.getCryptoKeyVersion(projectId, location, keyRing, cryptoKey, cryptoKeyVersion);
+  }
+
+  /**
+   * Retrieves a {@link PublicKey} for the {@link CryptoKeyVersion} as specified if it exists.
+   *
+   * @param projectId The ID of the project where the key is hosted.
+   * @param location The name of the location where the key is hosted.
+   * @param keyRing The name of the key ring where the key is hosted.
+   * @param cryptoKey The name of the key to get a specific version from.
+   * @param cryptoKeyVersion The name of the version of the key to retrieve.
+   * @return The {@link PublicKey} associated with the specified {@link CryptoKeyVersion}
+   * @throws IOException An error occurred attempting to get the public key.
+   */
+  public PublicKey getPublicKey(
+      final String projectId,
+      final String location,
+      final String keyRing,
+      final String cryptoKey,
+      final String cryptoKeyVersion)
+      throws IOException {
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(location));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(keyRing));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(cryptoKey));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(cryptoKeyVersion));
+    return cloudKMS.getPublicKey(projectId, location, keyRing, cryptoKey, cryptoKeyVersion);
   }
 
   /**

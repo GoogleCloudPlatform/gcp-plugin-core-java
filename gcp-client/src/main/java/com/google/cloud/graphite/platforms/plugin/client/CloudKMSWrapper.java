@@ -23,6 +23,7 @@ import com.google.api.services.cloudkms.v1.model.CryptoKeyVersion;
 import com.google.api.services.cloudkms.v1.model.Digest;
 import com.google.api.services.cloudkms.v1.model.KeyRing;
 import com.google.api.services.cloudkms.v1.model.Location;
+import com.google.api.services.cloudkms.v1.model.PublicKey;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -61,6 +62,17 @@ class CloudKMSWrapper {
         .getCryptoKeys();
   }
 
+  CryptoKey getCryptoKey(String projectId, String location, String keyRing, String cryptoKey)
+      throws IOException {
+    return cloudKMS
+        .projects()
+        .locations()
+        .keyRings()
+        .cryptoKeys()
+        .get(toCryptoKeyVersionParent(projectId, location, keyRing, cryptoKey))
+        .execute();
+  }
+
   List<CryptoKeyVersion> listCryptoKeyVersions(
       String projectId, String location, String keyRing, String cryptoKey) throws IOException {
     return cloudKMS
@@ -84,6 +96,20 @@ class CloudKMSWrapper {
         .cryptoKeys()
         .cryptoKeyVersions()
         .get(toCryptoKeyVersionName(projectId, location, keyRing, cryptoKey, cryptoKeyVersion))
+        .execute();
+  }
+
+  PublicKey getPublicKey(
+      String projectId, String location, String keyRing, String cryptoKey, String cryptoKeyVersion)
+      throws IOException {
+    return cloudKMS
+        .projects()
+        .locations()
+        .keyRings()
+        .cryptoKeys()
+        .cryptoKeyVersions()
+        .getPublicKey(
+            toCryptoKeyVersionName(projectId, location, keyRing, cryptoKey, cryptoKeyVersion))
         .execute();
   }
 
