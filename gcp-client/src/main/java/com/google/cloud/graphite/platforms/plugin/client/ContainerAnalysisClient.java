@@ -171,6 +171,7 @@ public class ContainerAnalysisClient {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(noteProjectId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(noteId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(signature));
+    Preconditions.checkArgument(!Strings.isNullOrEmpty(publicKeyId));
     Preconditions.checkArgument(!Strings.isNullOrEmpty(payload));
     return containerAnalysis.createAttestation(
         projectId, resourceUrl, noteProjectId, noteId, signature, publicKeyId, payload);

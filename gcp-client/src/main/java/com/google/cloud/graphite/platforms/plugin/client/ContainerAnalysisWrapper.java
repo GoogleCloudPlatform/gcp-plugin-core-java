@@ -23,6 +23,7 @@ import com.google.api.services.containeranalysis.v1beta1.model.GenericSignedAtte
 import com.google.api.services.containeranalysis.v1beta1.model.Occurrence;
 import com.google.api.services.containeranalysis.v1beta1.model.Resource;
 import com.google.api.services.containeranalysis.v1beta1.model.Signature;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
@@ -48,7 +49,7 @@ public class ContainerAnalysisWrapper {
     return containerAnalysis
         .projects()
         .occurrences()
-        .get(toOccurenceName(projectId, occurrenceId))
+        .get(toOccurrenceName(projectId, occurrenceId))
         .execute();
   }
 
@@ -75,7 +76,8 @@ public class ContainerAnalysisWrapper {
     return String.format("projects/%s", projectId);
   }
 
-  private static String toOccurenceName(String projectId, String occurrenceId) {
+  @VisibleForTesting
+  static String toOccurrenceName(String projectId, String occurrenceId) {
     return String.format("projects/%s/occurrences/%s", projectId, occurrenceId);
   }
 
@@ -95,7 +97,8 @@ public class ContainerAnalysisWrapper {
                 .setSerializedPayload(payload));
   }
 
-  private static Occurrence toAttestationOccurrence(
+  @VisibleForTesting
+  static Occurrence toAttestationOccurrence(
       String resourceUri,
       String noteProjectId,
       String noteId,
