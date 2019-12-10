@@ -54,7 +54,7 @@ public class CloudKMSClient {
   public ImmutableList<Location> listLocations(final String projectId) throws IOException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(projectId));
     return processResourceList(
-        cloudKMS.listLocations(projectId), Comparator.comparing(Location::getDisplayName));
+        cloudKMS.listLocations(projectId), Comparator.comparing(Location::getName));
   }
 
   /**

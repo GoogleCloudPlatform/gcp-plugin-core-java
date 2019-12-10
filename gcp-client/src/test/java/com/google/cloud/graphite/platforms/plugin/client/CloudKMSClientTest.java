@@ -780,10 +780,7 @@ public class CloudKMSClientTest {
 
   private static ImmutableList<Location> initLocationList(List<String> names) {
     return ImmutableList.copyOf(
-        names
-            .stream()
-            .map(name -> new Location().setDisplayName(name))
-            .collect(Collectors.toList()));
+        names.stream().map(name -> new Location().setName(name)).collect(Collectors.toList()));
   }
 
   private static ImmutableList<KeyRing> initKeyRingList(List<String> names) {
