@@ -221,8 +221,10 @@ public class CloudKMSClient {
     CryptoKeyVersion cryptoKeyVersionObj =
         cloudKMS.getCryptoKeyVersion(projectId, location, keyRing, cryptoKey, cryptoKeyVersion);
     String purpose = parseKeyPurpose(cryptoKeyVersionObj.getAlgorithm());
-    Preconditions.checkArgument(
-        "SIGN".equals(purpose), "Key specified should have purpose SIGN, instead was: %s", purpose);
+    if (!"SIGN".equals(purpose)) {
+      throw new IllegalArgumentException(
+          String.format("Key specified should have purpose SIGN, instead was: %s", purpose));
+    }
     String digestAlgorithm = parseDigestAlgorithm(cryptoKeyVersionObj.getAlgorithm());
     try {
       return cloudKMS.asymmetricSign(

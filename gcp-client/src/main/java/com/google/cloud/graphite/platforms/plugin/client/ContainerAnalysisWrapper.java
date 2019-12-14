@@ -82,7 +82,7 @@ public class ContainerAnalysisWrapper {
   }
 
   private static String toNoteName(String projectId, String note) {
-    return String.format("projects/%s/note/%s", projectId, note);
+    return String.format("projects/%s/notes/%s", projectId, note);
   }
 
   private static Signature toSignature(String signature, String publicKeyId) {
