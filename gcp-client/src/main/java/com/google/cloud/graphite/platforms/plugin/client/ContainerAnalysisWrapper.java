@@ -41,6 +41,7 @@ public class ContainerAnalysisWrapper {
         .occurrences()
         .list(toOccurrenceParent(projectId))
         .setFilter(filter)
+        .setPageSize(1000)
         .execute()
         .getOccurrences();
   }

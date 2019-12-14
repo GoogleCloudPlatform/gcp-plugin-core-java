@@ -183,16 +183,12 @@ public class ContainerAnalysisClient {
       occurrences =
           containerAnalysis.listOccurrences(
               projectId,
-              buildFilterString(
-                  ImmutableMap.of(
-                      "resourceUrl",
-                      resourceUrl,
-                      "noteProjectId",
-                      VULNERABILITY_NOTE_PROJECT_ID,
-                      "noteId",
-                      VULNERABILITY_NOTE_ID)));
+              buildFilterString(ImmutableMap.of("resourceUrl", resourceUrl, "kind", "DISCOVERY")));
     } catch (IOException ioe) {
       log.warning(String.format("Error listing occurrences: %s. Retrying ...", ioe.getMessage()));
+      return Optional.empty();
+    }
+    if (occurrences == null) {
       return Optional.empty();
     }
     for (Occurrence o : occurrences) {
