@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.CloudKMSClient}. */
+/** Tests {@link CloudKMSClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class CloudKMSClientTest {
   private static final String TEST_PROJECT_ID = "test-project";

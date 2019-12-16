@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ClientFactory}. */
+/** Tests {@link ClientFactory}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ClientFactoryTest {
   @Test

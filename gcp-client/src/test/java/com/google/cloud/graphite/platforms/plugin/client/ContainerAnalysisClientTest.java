@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ContainerAnalysisClient}. */
+/** Tests {@link ContainerAnalysisClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ContainerAnalysisClientTest {
   private static final String TEST_PROJECT_ID = "test-project";

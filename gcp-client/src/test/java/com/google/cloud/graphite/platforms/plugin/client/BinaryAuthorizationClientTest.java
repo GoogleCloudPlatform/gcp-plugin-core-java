@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.BinaryAuthorizationClient}. */
+/** Tests {@link BinaryAuthorizationClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class BinaryAuthorizationClientTest {
   private static final String TEST_PROJECT_ID = "test-project-id";
