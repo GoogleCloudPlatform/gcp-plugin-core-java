@@ -69,8 +69,7 @@ public class ClientFactory {
    * Initializes a {@link BinaryAuthorizationClient} with the properties of this {@link
    * ClientFactory}.
    *
-   * @return A {@link BinaryAuthorizationClient} for interacting with the Google Kubernetes Engine
-   *     API.
+   * @return A {@link BinaryAuthorizationClient} for interacting with the Binary Authorization API.
    */
   public BinaryAuthorizationClient binaryAuthorizationClient() {
     return new BinaryAuthorizationClient(
@@ -84,7 +83,7 @@ public class ClientFactory {
   /**
    * Initializes a {@link CloudKMSClient} with the properties of this {@link ClientFactory}.
    *
-   * @return A {@link CloudKMSClient} for interacting with the Google Kubernetes Engine API.
+   * @return A {@link CloudKMSClient} for interacting with the Cloud KMS API.
    */
   public CloudKMSClient cloudKMSClient() {
     return new CloudKMSClient(
@@ -143,8 +142,7 @@ public class ClientFactory {
    * Initializes a {@link ContainerAnalysisClient} with the properties of this {@link
    * ClientFactory}.
    *
-   * @return A {@link ContainerAnalysisClient} for interacting with the Google Kubernetes Engine
-   *     API.
+   * @return A {@link ContainerAnalysisClient} for interacting with the Container Analysis API.
    */
   public ContainerAnalysisClient containerAnalysisClient() {
     return new ContainerAnalysisClient(
