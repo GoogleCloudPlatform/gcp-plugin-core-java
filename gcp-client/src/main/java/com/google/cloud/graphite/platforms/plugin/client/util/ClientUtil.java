@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,6 +98,26 @@ public class ClientUtil {
       sb.append("(labels.").append(l.getKey()).append(" eq ").append(l.getValue()).append(") ");
     }
     return sb.toString().trim();
+  }
+
+  /**
+   * Converts a map of GCP properties into filters.
+   *
+   * @param filters A map of key:value properties.
+   * @return A filter string that is a concatenation of strings in the form "key=\"value\"" joined
+   *     by " AND ".
+   */
+  public static String buildFilterString(final Map<String, String> filters) {
+    StringBuilder sb = new StringBuilder();
+    Iterator<Map.Entry<String, String>> it = filters.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<String, String> f = it.next();
+      sb.append(f.getKey()).append(String.format("=\"%s\"", f.getValue()));
+      if (it.hasNext()) {
+        sb.append(" AND ");
+      }
+    }
+    return sb.toString();
   }
 
   /**

@@ -22,9 +22,12 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.binaryauthorization.v1beta1.BinaryAuthorization;
+import com.google.api.services.cloudkms.v1.CloudKMS;
 import com.google.api.services.cloudresourcemanager.CloudResourceManager;
 import com.google.api.services.compute.Compute;
 import com.google.api.services.container.Container;
+import com.google.api.services.containeranalysis.v1beta1.ContainerAnalysis;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -63,14 +66,30 @@ public class ClientFactory {
   }
 
   /**
-   * Initializes a {@link ComputeClient} with the properties of this {@link ClientFactory}.
+   * Initializes a {@link BinaryAuthorizationClient} with the properties of this {@link
+   * ClientFactory}.
    *
-   * @return A {@link ComputeClient} for interacting with the Google Compute Engine API.
+   * @return A {@link BinaryAuthorizationClient} for interacting with the Google Kubernetes Engine
+   *     API.
    */
-  public ComputeClient computeClient() {
-    return new ComputeClient(
-        new ComputeWrapper(
-            new Compute.Builder(transport, jsonFactory, httpRequestInitializer)
+  public BinaryAuthorizationClient binaryAuthorizationClient() {
+    return new BinaryAuthorizationClient(
+        new BinaryAuthorizationWrapper(
+            new BinaryAuthorization.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
+  }
+
+  /**
+   * Initializes a {@link CloudKMSClient} with the properties of this {@link ClientFactory}.
+   *
+   * @return A {@link CloudKMSClient} for interacting with the Google Kubernetes Engine API.
+   */
+  public CloudKMSClient cloudKMSClient() {
+    return new CloudKMSClient(
+        new CloudKMSWrapper(
+            new CloudKMS.Builder(transport, jsonFactory, httpRequestInitializer)
                 .setGoogleClientRequestInitializer(this::initializeRequest)
                 .setApplicationName(applicationName)
                 .build()));
@@ -93,6 +112,20 @@ public class ClientFactory {
   }
 
   /**
+   * Initializes a {@link ComputeClient} with the properties of this {@link ClientFactory}.
+   *
+   * @return A {@link ComputeClient} for interacting with the Google Compute Engine API.
+   */
+  public ComputeClient computeClient() {
+    return new ComputeClient(
+        new ComputeWrapper(
+            new Compute.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
+  }
+
+  /**
    * Initializes a {@link ContainerClient} with the properties of this {@link ClientFactory}.
    *
    * @return A {@link ContainerClient} for interacting with the Google Kubernetes Engine API.
@@ -101,6 +134,22 @@ public class ClientFactory {
     return new ContainerClient(
         new ContainerWrapper(
             new Container.Builder(transport, jsonFactory, httpRequestInitializer)
+                .setGoogleClientRequestInitializer(this::initializeRequest)
+                .setApplicationName(applicationName)
+                .build()));
+  }
+
+  /**
+   * Initializes a {@link ContainerAnalysisClient} with the properties of this {@link
+   * ClientFactory}.
+   *
+   * @return A {@link ContainerAnalysisClient} for interacting with the Google Kubernetes Engine
+   *     API.
+   */
+  public ContainerAnalysisClient containerAnalysisClient() {
+    return new ContainerAnalysisClient(
+        new ContainerAnalysisWrapper(
+            new ContainerAnalysis.Builder(transport, jsonFactory, httpRequestInitializer)
                 .setGoogleClientRequestInitializer(this::initializeRequest)
                 .setApplicationName(applicationName)
                 .build()));

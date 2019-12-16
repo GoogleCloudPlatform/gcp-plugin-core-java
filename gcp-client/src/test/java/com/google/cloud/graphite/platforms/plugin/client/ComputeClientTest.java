@@ -41,7 +41,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ComputeClient}. */
+/** Tests {@link ComputeClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ComputeClientTest {
   private static final String TEST_PROJECT_ID = "test-project";

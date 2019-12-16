@@ -16,6 +16,9 @@
 
 package com.google.cloud.graphite.platforms.plugin.client;
 
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.HttpRequest;
 import com.google.api.services.container.Container;
 import com.google.api.services.container.model.Cluster;
 import java.io.IOException;
@@ -26,6 +29,10 @@ import java.util.List;
  * of final parameters or parameter checking is intended, this is purely for wrapping.
  */
 class ContainerWrapper {
+  private static final String GET_RESOURCE_URL = "https://%s/v2/%s/%s/manifests/%s";
+  private static final String MANIFEST_ACCEPT_TYPE =
+      "application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json";
+  private static final String DIGEST_HEADER = "docker-content-digest";
   private final Container container;
 
   ContainerWrapper(Container container) {
@@ -49,6 +56,21 @@ class ContainerWrapper {
         .list(toApiParent(projectId, location))
         .execute()
         .getClusters();
+  }
+
+  String getDigest(String domain, String projectId, String name, String tag) throws IOException {
+    HttpRequest request =
+        container
+            .getRequestFactory()
+            .buildGetRequest(
+                new GenericUrl(String.format(GET_RESOURCE_URL, domain, projectId, name, tag)));
+    HttpHeaders headers = request.getHeaders();
+    headers.setAccept(MANIFEST_ACCEPT_TYPE);
+    return request
+        .setHeaders(headers)
+        .execute()
+        .getHeaders()
+        .getFirstHeaderStringValue(DIGEST_HEADER);
   }
 
   private static String toApiName(

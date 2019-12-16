@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.api.services.compute.model.Zone;
 import com.google.cloud.graphite.platforms.plugin.client.model.InstanceResourceData;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -103,6 +104,32 @@ public class ClientUtilTest {
     String expect = "(labels.key1 eq value1) (labels.key2 eq value2)";
 
     String got = ClientUtil.buildLabelsFilterString(labels);
+    assertEquals(expect, got);
+  }
+
+  @Test
+  public void testBuildFilterStringNoFilters() {
+    Map<String, String> filters = ImmutableMap.<String, String>builder().build();
+    String expect = "";
+    String got = ClientUtil.buildFilterString(filters);
+    assertEquals(expect, got);
+  }
+
+  @Test
+  public void testBuildFilterStringOneFilter() {
+    Map<String, String> filters =
+        ImmutableMap.<String, String>builder().put("key", "value").build();
+    String expect = "key=\"value\"";
+    String got = ClientUtil.buildFilterString(filters);
+    assertEquals(expect, got);
+  }
+
+  @Test
+  public void testBuildFilterStringMultipleFilters() {
+    Map<String, String> filters =
+        ImmutableMap.<String, String>builder().put("key1", "value1").put("key2", "value2").build();
+    String expect = "key1=\"value1\" AND key2=\"value2\"";
+    String got = ClientUtil.buildFilterString(filters);
     assertEquals(expect, got);
   }
 

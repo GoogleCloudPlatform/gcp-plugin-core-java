@@ -28,13 +28,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** Tests {@link com.google.cloud.graphite.platforms.plugin.client.ContainerClient}. */
+/** Tests {@link ContainerClient}. */
 @RunWith(MockitoJUnitRunner.class)
 public class ContainerClientTest {
   private static final String TEST_PROJECT_ID = "test-project-id";
   private static final String TEST_LOCATION = "us-west1-a";
   private static final String TEST_CLUSTER = "testCluster";
   private static final String OTHER_CLUSTER = "otherCluster";
+  private static final String TEST_RESOURCE_URI = "gcr.io/test-project-id/test";
+  private static final String TEST_TAG = "test";
+  private static final String TEST_DIGEST =
+      "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetClustersErrorWithNullProjectId() throws IOException {
@@ -164,6 +168,61 @@ public class ContainerClientTest {
     Mockito.when(container.listClusters(anyString(), anyString())).thenThrow(IOException.class);
     ContainerClient containerClient = new ContainerClient(container);
     containerClient.listAllClusters(TEST_PROJECT_ID);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetDigestErrorWithNullResourceUri() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest(null, TEST_TAG);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetDigestErrorWithEmptyResourceUri() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest("", TEST_TAG);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetDigestErrorWithMalformedResourceUri() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest("gcr.io/abcd", TEST_TAG);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetDigestErrorWithNullTag() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest(TEST_RESOURCE_URI, null);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testGetDigestErrorWithEmptyTag() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest(TEST_RESOURCE_URI, "");
+  }
+
+  @Test(expected = IOException.class)
+  public void testGetDigestErrorWithIOException() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.getDigest(anyString(), anyString(), anyString(), anyString()))
+        .thenThrow(IOException.class);
+    ContainerClient containerClient = new ContainerClient(container);
+    containerClient.getDigest(TEST_RESOURCE_URI, TEST_TAG);
+  }
+
+  @Test
+  public void testGetDigestWithProperInputs() throws IOException {
+    ContainerWrapper container = Mockito.mock(ContainerWrapper.class);
+    Mockito.when(container.getDigest("gcr.io", TEST_PROJECT_ID, "test", TEST_TAG))
+        .thenReturn(TEST_DIGEST);
+    ContainerClient containerClient = new ContainerClient(container);
+    String actual = containerClient.getDigest(TEST_RESOURCE_URI, TEST_TAG);
+    assertNotNull(actual);
+    assertEquals(TEST_DIGEST, actual);
   }
 
   private static List<Cluster> initClusterList(List<String> clusterNames) {
