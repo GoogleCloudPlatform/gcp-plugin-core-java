@@ -29,6 +29,24 @@ adheres to [Sematic Versioning](http://semver.org/spec/v2.0.0.html).
  
  ### Fixed
 
+## [0.3.0] - 2019-12-17
+
+ ### Added
+  - BinaryAuthorizationClient, CloudKMSClient, ContainerAnalysisClient
+  - Methods in ClientFactory to generate new clients:
+     - binaryAuthorizationClient()
+     - cloudKMSClient()
+     - containerAnalysisClient()
+  - API method in ContainerClient: getDigest()
+  - Utility method in ClientUtil: buildFilterString()
+  - Dependencies from com.google.api-services:
+     - google-api-services-binaryauthorization:v1beta1-rev38-1.25.0
+     - google-api-services-containeranalysis:v1beta1-rev19-1.25.0
+     - google-api-services-cloudkms:v1-rev89-1.25.0
+
+ ### Changed
+  - org.projectlombok:lombok version changed: 1.18.6 to 1.18.8
+
 ## [0.2.1] - 2019-11-06
 
  ### Added
